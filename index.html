@@ -41,9 +41,9 @@
             <div class="flex items-center gap-3"><i data-lucide="radio" class="w-5 h-5 text-red-500 animate-pulse"></i><h3 class="text-sm font-black uppercase text-white">TELSİZ KOMUTA</h3></div>
             <button onclick="toggleRadio(false)" class="p-2 glass rounded-lg"><i data-lucide="x" class="text-white"></i></button>
         </div>
-        <div class="p-6 bg-white/5 space-y-2 border-b border-white/5">
+        <div class="p-6 bg-white/5 space-y-2 border-b border-white/5 text-white">
             <label class="text-[9px] font-bold text-slate-500 uppercase">Yayın Kanalı</label>
-            <select id="channelSelect" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-bold uppercase text-white outline-none focus:border-red-600">
+            <select id="channelSelect" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-bold uppercase outline-none focus:border-red-600">
                 <option value="all">📢 TÜM TAKIMLAR (GENEL)</option>
             </select>
         </div>
@@ -69,7 +69,7 @@
             </div>
         </header>
         <div class="glass rounded-[2rem] overflow-hidden shadow-2xl">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse text-white">
                 <thead class="bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
                     <tr><th class="px-6 py-5">Takım Bilgisi</th><th class="px-6 py-5">Kod</th><th class="px-6 py-5">Süre / Kontrol</th><th class="px-6 py-5">Ceza (+/-)</th><th class="px-6 py-5 text-right">İşlem</th></tr>
                 </thead>
@@ -136,20 +136,22 @@
             const t = teamsData.find(x => x.id === id); let up = {};
             if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() };
             else if(action === 'stop') { up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) }; }
-            else if(action === 'reset') { if(!confirm('Sıfırla?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; }
+            else if(action === 'reset') { if(!confirm('Süreyi sıfırla?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; }
             await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
         }
 
         async function adjPen(id, mins) {
             const t = teamsData.find(x => x.id === id);
-            const current = Number(t.elapsed_seconds || 0) + (t.is_timer_running ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0);
+            const current = Number(t.elapsed_seconds || 0) + (t.is_timer_running && t.timer_started_at ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0);
             const up = { elapsed_seconds: Math.max(0, current + (mins * 60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null };
             await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
         }
 
+        async function updateCode(id, c) { await supabaseClient.from('registrations').update({ team_code: c.trim().toUpperCase() }).eq('id', id); toast("KOD KAYDEDİLDİ"); }
+
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mHtml = t.members.map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3"><span class="font-bold text-sm text-red-500">${i === 0 ? '👑 LİDER' : i+1+'. ÜYE'}: ${m.name}</span><div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-bold uppercase mt-2"><div>Tel: ${m.phone}</div><div>Blm: ${m.dept}</div></div></div>`).join('');
+            let mHtml = t.members.map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3 text-white"><span class="font-bold text-sm text-red-500">${i === 0 ? '👑 LİDER' : i+1+'. ÜYE'}: ${m.name}</span><div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-bold uppercase mt-2"><div>Tel: ${m.phone}</div><div>Blm: ${m.dept}</div></div></div>`).join('');
             document.getElementById('modalBody').innerHTML = `<h2 class="text-2xl font-black uppercase text-white mb-6">${t.team_name}</h2><div class="modal-content">${mHtml}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
@@ -167,7 +169,7 @@
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const fileName = `voice_${Date.now()}.webm`;
+                    const fileName = `admin_voice_${Date.now()}.webm`;
                     const { data, error } = await supabaseClient.storage.from('radio_voice').upload(fileName, blob);
                     if(!error) {
                         const { data: url } = supabaseClient.storage.from('radio_voice').getPublicUrl(fileName);
@@ -193,7 +195,6 @@
         };
 
         setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`live-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
-        lucide.createIcons();
     </script>
 </body>
 </html>
