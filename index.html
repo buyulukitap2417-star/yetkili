@@ -15,8 +15,13 @@
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
         .btn-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
-        .penalty-btn { font-size: 8px; font-weight: 800; padding: 4px 6px; border-radius: 6px; transition: all 0.2s; }
-        .ptt-active { background: #ef4444 !important; box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); transform: scale(1.05); }
+        .penalty-btn { font-size: 8px; font-weight: 800; padding: 4px 6px; border-radius: 6px; transition: all 0.2s; width: 32px; text-align: center; }
+        .penalty-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        
+        /* Mikrofon Durum Efekti */
+        .mic-on { background: #ef4444 !important; animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
         #radioPanel { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%); }
         #radioPanel.open { transform: translateX(0); }
         .modal-content { max-height: 70vh; overflow-y: auto; }
@@ -29,30 +34,31 @@
 
     <!-- TAKIM DETAY MODAL -->
     <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none p-4">
-        <div class="glass w-full max-w-2xl rounded-[2rem] p-8 relative shadow-3xl border-t-4 border-red-700">
+        <div class="glass w-full max-w-2xl rounded-[2rem] p-8 relative shadow-3xl border-t-4 border-red-700 text-white">
             <button onclick="closeModal()" class="absolute top-6 right-6 p-2 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
             <div id="modalBody"></div>
         </div>
     </div>
 
-    <!-- TELSİZ PANELİ -->
+    <!-- TELSİZ (MİKROFON) PANELİ -->
     <div id="radioPanel" class="fixed top-0 right-0 h-full w-full max-w-md bg-[#020617] border-l border-white/10 z-[700] flex flex-col shadow-2xl">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-            <div class="flex items-center gap-3"><i data-lucide="radio" class="w-5 h-5 text-red-500 animate-pulse"></i><h3 class="text-sm font-black uppercase text-white">TELSİZ KOMUTA</h3></div>
+            <div class="flex items-center gap-3"><i data-lucide="mic-2" class="w-5 h-5 text-red-500"></i><h3 class="text-sm font-black uppercase text-white">SESLİ KOMUTA</h3></div>
             <button onclick="toggleRadio(false)" class="p-2 glass rounded-lg"><i data-lucide="x" class="text-white"></i></button>
         </div>
         <div class="p-6 bg-white/5 space-y-2 border-b border-white/5 text-white">
-            <label class="text-[9px] font-bold text-slate-500 uppercase">Yayın Kanalı</label>
-            <select id="channelSelect" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-bold uppercase outline-none focus:border-red-600">
-                <option value="all">📢 TÜM TAKIMLAR (GENEL)</option>
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Kanal Seçimi</label>
+            <select id="channelSelect" class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-bold uppercase text-white outline-none focus:border-red-600">
+                <option value="all">📢 TÜM SAHA (GENEL ANONS)</option>
             </select>
         </div>
         <div id="msgLog" class="flex-1 overflow-y-auto p-6 space-y-3 bg-black/10"></div>
         <div class="p-8 border-t border-white/10 flex flex-col items-center gap-3 bg-white/5">
-            <div id="pttBtn" class="relative w-24 h-24 bg-red-600/20 rounded-full flex items-center justify-center cursor-pointer transition-all select-none touch-none">
-                <div class="relative w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white/5"><i data-lucide="mic" class="text-white w-8 h-8"></i></div>
-            </div>
-            <p id="pttStatus" class="text-[10px] font-black uppercase text-red-500 tracking-widest">BAS-KONUŞ</p>
+            <button id="micBtn" onclick="toggleMic()" class="relative w-20 h-20 bg-red-600/20 rounded-full flex items-center justify-center transition-all shadow-xl border-4 border-white/10">
+                <i data-lucide="mic" id="micIcon" class="text-white w-8 h-8 transition-transform"></i>
+            </button>
+            <p id="micStatus" class="text-[10px] font-black uppercase text-red-500 tracking-widest">MİKROFON KAPALI</p>
+            <span class="text-[8px] text-slate-500 uppercase font-bold">Açmak için bir kez tıklayın</span>
         </div>
     </div>
 
@@ -61,17 +67,18 @@
         <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-red-700 rounded-2xl shadow-xl"><i data-lucide="shield-check" class="text-white"></i></div>
-                <div><h1 class="text-2xl font-black uppercase text-white">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Yarışma Kontrol ve Telsiz Hattı</p></div>
+                <div><h1 class="text-2xl font-black uppercase text-white">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Yarışma Kontrol Paneli</p></div>
             </div>
             <div class="flex gap-3">
-                <button onclick="toggleRadio(true)" class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 flex items-center gap-2 font-black text-xs shadow-lg transition-all"><i data-lucide="radio"></i> TELSİZ PANELİ</button>
+                <button onclick="toggleRadio(true)" class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 flex items-center gap-2 font-black text-xs shadow-lg transition-all"><i data-lucide="mic"></i> SES SİSTEMİ</button>
                 <button onclick="fetchTeams()" class="px-4 py-3 glass rounded-xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refresh-icon"></i></button>
             </div>
         </header>
+
         <div class="glass rounded-[2rem] overflow-hidden shadow-2xl">
             <table class="w-full text-left border-collapse text-white">
                 <thead class="bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <tr><th class="px-6 py-5">Takım Bilgisi</th><th class="px-6 py-5">Kod</th><th class="px-6 py-5">Süre / Kontrol</th><th class="px-6 py-5">Ceza (+/-)</th><th class="px-6 py-5 text-right">İşlem</th></tr>
+                    <tr><th class="px-6 py-5">Takım Adı</th><th class="px-6 py-5">Giriş Kodu</th><th class="px-6 py-5">Süre / Kontrol</th><th class="px-6 py-5">Ceza (+/-)</th><th class="px-6 py-5 text-right">İşlem</th></tr>
                 </thead>
                 <tbody id="teamsBody" class="divide-y divide-white/5 text-sm"></tbody>
             </table>
@@ -85,7 +92,7 @@
         const SUPABASE_KEY = 'sb_publishable_2lmWYp5Pkvn_BsADVHPKug_KK9n8v2-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let teamsData = [], mediaRecorder, audioChunks = [];
+        let teamsData = [], mediaRecorder, audioChunks = [], isRecording = false;
 
         function toast(msg, isErr = false) {
             const div = document.createElement('div');
@@ -96,7 +103,11 @@
 
         async function fetchTeams() {
             const { data, error } = await supabaseClient.from('registrations').select('*').order('created_at', { ascending: false });
-            if (!error) { teamsData = data; render(); updateChannelList(); }
+            if (!error) { 
+                teamsData = data; 
+                render(); 
+                updateChannelList();
+            }
         }
 
         function updateChannelList() {
@@ -111,7 +122,7 @@
             body.innerHTML = teamsData.map(t => `
                 <tr class="hover:bg-white/5 transition-colors">
                     <td class="px-6 py-4"><button onclick="openModal('${t.id}')" class="font-bold uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4">${t.team_name}</button></td>
-                    <td class="px-6 py-4 font-mono text-red-500 font-bold">${t.team_code || '---'}</td>
+                    <td class="px-6 py-4 font-mono text-red-500 font-bold tracking-widest uppercase">${t.team_code || '---'}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
                             <button onclick="handleTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2.5 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl"><i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i></button>
@@ -119,8 +130,21 @@
                             <div class="text-sm font-black mono text-white ml-2" id="live-${t.id}">${formatTime(t)}</div>
                         </div>
                     </td>
-                    <td class="px-6 py-4"><div class="flex flex-col gap-1"><div class="flex gap-1"><button onclick="adjPen('${t.id}', 5)" class="penalty-btn btn-warning">+5</button><button onclick="adjPen('${t.id}', 15)" class="penalty-btn btn-warning">+15</button></div><div class="flex gap-1"><button onclick="adjPen('${t.id}', -5)" class="penalty-btn btn-info">-5</button><button onclick="adjPen('${t.id}', -15)" class="penalty-btn btn-info">-15</button></div></div></td>
-                    <td class="px-6 py-4 text-right"><button onclick="openDirectRadio('${t.id}')" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"><i data-lucide="radio"></i></button></td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex gap-1">
+                                <button onclick="adjPen('${t.id}', 5)" class="penalty-btn btn-warning">+5</button>
+                                <button onclick="adjPen('${t.id}', 15)" class="penalty-btn btn-warning">+15</button>
+                                <button onclick="adjPen('${t.id}', 25)" class="penalty-btn btn-warning">+25</button>
+                            </div>
+                            <div class="flex gap-1">
+                                <button onclick="adjPen('${t.id}', -5)" class="penalty-btn btn-info">-5</button>
+                                <button onclick="adjPen('${t.id}', -15)" class="penalty-btn btn-info">-15</button>
+                                <button onclick="adjPen('${t.id}', -25)" class="penalty-btn btn-info">-25</button>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right"><button onclick="openDirectRadio('${t.id}')" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"><i data-lucide="mic"></i></button></td>
                 </tr>
             `).join('');
             lucide.createIcons();
@@ -136,7 +160,10 @@
             const t = teamsData.find(x => x.id === id); let up = {};
             if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() };
             else if(action === 'stop') { up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) }; }
-            else if(action === 'reset') { if(!confirm('Süreyi sıfırla?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; }
+            else if(action === 'reset') { 
+                if(!confirm('Bu takımın süresini sıfırlamak istiyor musunuz?')) return; 
+                up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null };
+            }
             await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
         }
 
@@ -147,48 +174,68 @@
             await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
         }
 
-        async function updateCode(id, c) { await supabaseClient.from('registrations').update({ team_code: c.trim().toUpperCase() }).eq('id', id); toast("KOD KAYDEDİLDİ"); }
+        async function updateCode(id, c) { await supabaseClient.from('registrations').update({ team_code: c.trim().toUpperCase() }).eq('id', id); toast("Giriş Kodu Kaydedildi"); }
 
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mHtml = t.members.map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3 text-white"><span class="font-bold text-sm text-red-500">${i === 0 ? '👑 LİDER' : i+1+'. ÜYE'}: ${m.name}</span><div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-bold uppercase mt-2"><div>Tel: ${m.phone}</div><div>Blm: ${m.dept}</div></div></div>`).join('');
+            let mHtml = t.members.map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3"><span class="font-bold text-sm text-red-500">${i === 0 ? '👑 EKİP LİDERİ' : i+1+'. ÜYE'}: ${m.name}</span><div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-bold uppercase mt-2"><div>Tel: ${m.phone}</div><div>Bölüm: ${m.dept}</div></div></div>`).join('');
             document.getElementById('modalBody').innerHTML = `<h2 class="text-2xl font-black uppercase text-white mb-6">${t.team_name}</h2><div class="modal-content">${mHtml}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
 
-        // --- TELSİZ ---
-        const ptt = document.getElementById('pttBtn'), pttStat = document.getElementById('pttStatus');
+        // --- SES SİSTEMİ (MIKROFON TOGGLE) ---
+        async function toggleMic() {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = uploadVoice;
+                    mediaRecorder.start();
+                    isRecording = true;
+                    document.getElementById('micBtn').classList.add('mic-on');
+                    document.getElementById('micStatus').innerText = "KAYDEDİLİYOR...";
+                    document.getElementById('micIcon').style.transform = "scale(1.2)";
+                } catch (e) { toast("Mikrofon izni reddedildi!", true); }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('micBtn').classList.remove('mic-on');
+                document.getElementById('micStatus').innerText = "GÖNDERİLİYOR...";
+                document.getElementById('micIcon').style.transform = "scale(1)";
+            }
+        }
+
+        async function uploadVoice() {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const fileName = `admin_${Date.now()}.webm`;
+            const { data, error } = await supabaseClient.storage.from('radio_voice').upload(fileName, blob);
+            if(!error) {
+                const { data: urlData } = supabaseClient.storage.from('radio_voice').getPublicUrl(fileName);
+                await supabaseClient.from('radio_messages').insert({
+                    sender_type: 'admin',
+                    sender_id: 'admin',
+                    receiver_id: document.getElementById('channelSelect').value,
+                    sender_name: 'KOMUTA MERKEZİ',
+                    audio_url: urlData.publicUrl
+                });
+                document.getElementById('micStatus').innerText = "ANONS GÖNDERİLDİ";
+                setTimeout(() => document.getElementById('micStatus').innerText = "MİKROFON KAPALI", 2000);
+            }
+        }
+
         function toggleRadio(b) { document.getElementById('radioPanel').classList.toggle('open', b); }
         function openDirectRadio(id) { document.getElementById('channelSelect').value = id; toggleRadio(true); }
 
-        async function startRec() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' }); audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const fileName = `admin_voice_${Date.now()}.webm`;
-                    const { data, error } = await supabaseClient.storage.from('radio_voice').upload(fileName, blob);
-                    if(!error) {
-                        const { data: url } = supabaseClient.storage.from('radio_voice').getPublicUrl(fileName);
-                        await supabaseClient.from('radio_messages').insert({ sender_type: 'admin', sender_id: 'admin', receiver_id: document.getElementById('channelSelect').value, sender_name: 'KOMUTA MERKEZİ', audio_url: url.publicUrl });
-                        pttStat.innerText = "BAS-KONUŞ";
-                    }
-                };
-                mediaRecorder.start(); ptt.classList.add('ptt-active'); pttStat.innerText = "KAYDEDİLİYOR...";
-            } catch (e) { toast("Mikrofon izni gerek!", true); }
-        }
-        ptt.onmousedown = startRec; window.onmouseup = () => mediaRecorder?.state === 'recording' && mediaRecorder.stop();
-        ptt.ontouchstart = (e) => { e.preventDefault(); startRec(); }; window.ontouchend = () => mediaRecorder?.state === 'recording' && mediaRecorder.stop();
-
         window.onload = () => {
             fetchTeams();
-            supabaseClient.channel('radio_in').on('postgres_changes', { event:'INSERT', schema:'public', table:'radio_messages' }, (p) => {
+            supabaseClient.channel('radio_events').on('postgres_changes', { event:'INSERT', schema:'public', table:'radio_messages' }, (p) => {
                 if(p.new.sender_type === 'team') {
-                    document.getElementById('sfxStatic').play(); new Audio(p.new.audio_url).play();
-                    document.getElementById('msgLog').innerHTML += `<div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"><div class="text-[9px] font-black text-emerald-500 mb-1">📥 GELEN: ${p.new.sender_name}</div></div>`;
+                    document.getElementById('sfxStatic').play().catch(() => {});
+                    new Audio(p.new.audio_url).play().catch(() => {});
+                    document.getElementById('msgLog').innerHTML += `<div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-white"><div class="text-[9px] font-black text-emerald-500 mb-1">📥 GELEN SES: ${p.new.sender_name}</div></div>`;
                 }
             }).subscribe();
             supabaseClient.channel('updates').on('postgres_changes', { event:'*', schema:'public', table:'registrations' }, () => fetchTeams()).subscribe();
