@@ -27,6 +27,22 @@
         .modal-content { max-height: 70vh; overflow-y: auto; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
+
+        .team-code-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            width: 80px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+            color: #ef4444;
+            text-transform: uppercase;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .team-code-input:focus { border-color: #ef4444; background: rgba(0,0,0,0.6); }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -66,7 +82,7 @@
                 <div class="p-3 bg-red-700 rounded-2xl shadow-xl shadow-red-900/30"><i data-lucide="shield-check"></i></div>
                 <div>
                     <h1 class="text-2xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1>
-                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Canlı Takip ve Özel Görüşme</p>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı Görüşme</p>
                 </div>
             </div>
             <button onclick="fetchTeams()" class="p-4 glass rounded-xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refreshIcon"></i></button>
@@ -79,7 +95,7 @@
                         <th class="px-6 py-5">Takım Bilgisi</th>
                         <th class="px-6 py-5">Süre / Kontrol</th>
                         <th class="px-6 py-5 text-center">Ceza (+/-)</th>
-                        <th class="px-6 py-5 text-center">Özel Ses</th>
+                        <th class="px-6 py-5 text-center">Özel Ses Kontrol</th>
                         <th class="px-6 py-5 text-right">Durum</th>
                     </tr>
                 </thead>
@@ -98,9 +114,9 @@
 
         let teamsData = [], peer = null, myStream = null;
         let isGlobalMicOn = false, isGlobalSpkOn = false;
-        let activeCalls = {}; // PeerID -> CallObject
-        let privateMicTarget = null; // null veya TeamPeerID
-        let privateSpkTarget = null; // null veya TeamPeerID
+        let activeCalls = {};
+        let privateMicTarget = null;
+        let privateSpkTarget = null;
 
         function showToast(msg, isErr = false) {
             const div = document.createElement('div');
@@ -114,6 +130,17 @@
             if (!error) { teamsData = data; render(); }
         }
 
+        async function updateTeamCode(id, newCode) {
+            const cleanCode = newCode.trim().toUpperCase();
+            const { error } = await supabaseClient.from('registrations').update({ team_code: cleanCode }).eq('id', id);
+            if (!error) {
+                showToast("TAKIM KODU GÜNCELLENDİ: " + cleanCode);
+                fetchTeams();
+            } else {
+                showToast("KOD GÜNCELLENEMEDİ!", true);
+            }
+        }
+
         function render() {
             const body = document.getElementById('teamsBody');
             body.innerHTML = teamsData.map(t => {
@@ -125,7 +152,11 @@
                 <tr class="hover:bg-white/5 transition-colors">
                     <td class="px-6 py-4">
                         <button onclick="openModal('${t.id}')" class="font-bold uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4 text-left">${t.team_name}</button>
-                        <div class="text-[9px] text-red-500 font-mono mt-1">${t.team_code || 'KODSUZ'}</div>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">KOD:</span>
+                            <input type="text" class="team-code-input" value="${t.team_code || ''}" 
+                                   onchange="updateTeamCode('${t.id}', this.value)" placeholder="---">
+                        </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
@@ -171,13 +202,15 @@
             lucide.createIcons();
         }
 
-        // --- PEERJS SES SİSTEMİ (REHBER) ---
+        // --- PEERJS SES SİSTEMİ ---
         function initVoice() {
             peer = new Peer('SDU_ADMIN_2026_VOICE');
 
             peer.on('open', (id) => {
-                document.getElementById('callStatusText').innerText = "HAKEM HATTI ÇEVRİMİÇİ";
-                document.getElementById('callStatusIcon').className = "p-4 bg-emerald-600 rounded-2xl text-white";
+                const statusTxt = document.getElementById('callStatusText');
+                const statusIcn = document.getElementById('callStatusIcon');
+                if(statusTxt) statusTxt.innerText = "HAKEM HATTI ÇEVRİMİÇİ";
+                if(statusIcn) statusIcn.className = "p-4 bg-emerald-600 rounded-2xl text-white";
                 showToast("Ses merkezi aktif edildi.");
             });
 
@@ -185,7 +218,7 @@
                 if (!myStream) {
                     try {
                         myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                        myStream.getAudioTracks()[0].enabled = false; // Başta kapalı
+                        myStream.getAudioTracks()[0].enabled = false;
                     } catch(e) { showToast("Mikrofon hatası!", true); }
                 }
                 call.answer(myStream);
@@ -206,7 +239,6 @@
                 document.getElementById('audioPlayers').appendChild(audio);
             }
             audio.srcObject = stream;
-            // Hoparlör mantığı: Genel açıksa duyulur, özel seçiliyse sadece o duyulur
             audio.muted = !isGlobalSpkOn && privateSpkTarget !== peerId;
         }
 
@@ -221,12 +253,10 @@
             const hardwareMicEnabled = isGlobalMicOn || privateMicTarget !== null;
             myStream.getAudioTracks()[0].enabled = hardwareMicEnabled;
 
-            // Her bir bağlantı için sesi filtrele
             Object.keys(activeCalls).forEach(peerId => {
                 const call = activeCalls[peerId];
                 const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
                 if (sender) {
-                    // Eğer genel açıksa herkese gider, özel açıksa sadece hedefe gider
                     sender.track.enabled = (isGlobalMicOn || privateMicTarget === peerId);
                 }
             });
@@ -235,7 +265,7 @@
 
         function toggleGlobalMic() {
             isGlobalMicOn = !isGlobalMicOn;
-            if (isGlobalMicOn) privateMicTarget = null; // Genel açılırsa özel kapanır
+            if (isGlobalMicOn) privateMicTarget = null;
             updateOutgoingVoice();
             updateGlobalUI();
         }
@@ -245,7 +275,7 @@
                 privateMicTarget = null;
             } else {
                 privateMicTarget = teamPeerId;
-                isGlobalMicOn = false; // Özel açılırsa genel kapanır
+                isGlobalMicOn = false;
             }
             updateOutgoingVoice();
             updateGlobalUI();
@@ -282,11 +312,15 @@
             const mBtn = document.getElementById('globalMicBtn'), mIcon = document.getElementById('globalMicIcon');
             const sBtn = document.getElementById('globalSpkBtn'), sIcon = document.getElementById('globalSpkIcon');
             
-            mBtn.className = isGlobalMicOn ? "px-6 py-3 bg-red-600 text-white rounded-xl font-black text-xs mic-pulse border border-red-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
-            mIcon.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
+            if (mBtn && mIcon) {
+                mBtn.className = isGlobalMicOn ? "px-6 py-3 bg-red-600 text-white rounded-xl font-black text-xs mic-pulse border border-red-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
+                mIcon.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
+            }
             
-            sBtn.className = isGlobalSpkOn ? "px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs border border-blue-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
-            sIcon.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
+            if (sBtn && sIcon) {
+                sBtn.className = isGlobalSpkOn ? "px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs border border-blue-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
+                sIcon.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
+            }
             
             lucide.createIcons();
         }
@@ -295,7 +329,8 @@
         function formatTimeDisplay(t) {
             let s = Number(t.elapsed_seconds || 0);
             if (t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000);
-            return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+            const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
         }
 
         async function controlTimer(id, action) {
@@ -315,7 +350,13 @@
 
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mHtml = t.members.map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3 text-white"><span class="font-bold text-red-500 uppercase text-xs">${i === 0 ? '👑 LİDER' : i+1+'. ÜYE'}: ${m.name}</span><div class="grid grid-cols-2 gap-4 text-[10px] text-slate-400 font-bold uppercase mt-3"><div>TEL: ${m.phone}</div><div>SINIF: ${m.class}</div><div>BÖLÜM: ${m.dept}</div></div></div>`).join('');
+            let mHtml = t.members.map((m, i) => `
+                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3">
+                    <span class="font-bold text-red-500 uppercase text-xs">${i === 0 ? '👑 LİDER' : (i+1)+'. ÜYE'}: ${m.name}</span>
+                    <div class="grid grid-cols-2 gap-4 text-[10px] text-slate-400 font-bold uppercase mt-3">
+                        <div>TEL: ${m.phone}</div><div>SINIF: ${m.class}</div><div>BÖLÜM: ${m.dept}</div>
+                    </div>
+                </div>`).join('');
             document.getElementById('modalBody').innerHTML = `<h2 class="text-xl font-black uppercase text-white mb-6">${t.team_name}</h2><div class="modal-content">${mHtml}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
