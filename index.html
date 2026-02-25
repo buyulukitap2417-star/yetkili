@@ -24,16 +24,17 @@
         .modal-content { max-height: 80vh; overflow-y: auto; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
-        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 85px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
+        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 90px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
+        .team-code-input:focus { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2"></div>
 
-    <!-- MODAL -->
-    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
-        <div class="glass w-full max-w-2xl rounded-[3rem] p-10 relative border-t-4 border-red-700 text-white shadow-3xl">
-            <button onclick="closeModal()" class="absolute top-8 right-8 p-2 glass rounded-full hover:text-red-500"><i data-lucide="x"></i></button>
+    <!-- TAKIM MODAL (DETAYLI ANALİZ) -->
+    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/85 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-2xl rounded-[3rem] p-8 md:p-12 relative border-t-4 border-red-700 text-white shadow-3xl">
+            <button onclick="closeModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
             <div id="modalBody"></div>
         </div>
     </div>
@@ -42,23 +43,24 @@
     <div class="max-w-7xl mx-auto mb-8 glass rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b-2 border-red-900/30 shadow-2xl">
         <div class="flex items-center gap-5 text-white">
             <div id="callStatusIcon" class="p-5 bg-slate-800 rounded-[1.5rem] transition-colors"><i data-lucide="radio" id="activeMicIcon"></i></div>
-            <div><h3 class="font-black uppercase text-base tracking-widest leading-none">SES MERKEZİ</h3><p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Bağlantı Bekleniyor</p></div>
+            <div><h3 class="font-black uppercase text-base tracking-widest leading-none">MERKEZ KONTROL</h3><p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Sinyal Aranıyor...</p></div>
         </div>
         <div class="flex flex-wrap items-center gap-4">
-            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10 shadow-lg">
+            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10">
                 <i data-lucide="volume-x" id="globalSpkIcon"></i> GENEL HOPARLÖR
             </button>
-            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10 shadow-lg">
+            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10">
                 <i data-lucide="mic-off" id="globalMicIcon"></i> GENEL MİKROFON
             </button>
         </div>
     </div>
 
+    <!-- ANA TABLO -->
     <div class="max-w-7xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
             <div class="flex items-center gap-4 text-white text-left">
-                <div class="p-3 bg-red-700 rounded-2xl shadow-2xl"><i data-lucide="shield-check"></i></div>
-                <div><h1 class="text-3xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı İzleme</p></div>
+                <div class="p-3 bg-red-700 rounded-2xl shadow-xl"><i data-lucide="shield-check"></i></div>
+                <div><h1 class="text-3xl font-black uppercase leading-none">SDÜ <span class="text-red-600">KOMUTA</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Canlı Takip ve Saha Yönetimi</p></div>
             </div>
             <button onclick="fetchTeams()" class="p-5 glass rounded-2xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refreshIcon"></i></button>
         </header>
@@ -66,7 +68,7 @@
         <div class="glass rounded-[3rem] overflow-hidden shadow-2xl border border-white/5">
             <table class="w-full text-left text-white border-collapse">
                 <thead class="bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <tr><th class="px-8 py-6">Takım ve Kod</th><th class="px-8 py-6 text-center">Süre / Kontrol</th><th class="px-8 py-6 text-center">Ceza (+/-)</th><th class="px-8 py-6 text-center">Özel Ses</th><th class="px-8 py-6 text-right">Canlı Takip</th></tr>
+                    <tr><th class="px-8 py-6">Takım ve Kod</th><th class="px-8 py-6 text-center">Süre / Kontrol</th><th class="px-8 py-6 text-center">Ceza (+/-)</th><th class="px-8 py-6 text-center">Özel Ses</th><th class="px-8 py-6 text-right">Canlı İzleme</th></tr>
                 </thead>
                 <tbody id="teamsBody" class="divide-y divide-white/5 text-sm"></tbody>
             </table>
@@ -80,7 +82,8 @@
         const SUPABASE_KEY = 'sb_publishable_2lmWYp5Pkvn_BsADVHPKug_KK9n8v2-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let teamsData = [], peer = null, myStream = null, isGlobalMicOn = false, isGlobalSpkOn = false;
+        let teamsData = [], peer = null, myStream = null;
+        let isGlobalMicOn = false, isGlobalSpkOn = false;
         let activeCalls = {}, privateMicTarget = null, privateSpkTarget = null;
 
         function showToast(msg, isErr = false) {
@@ -112,7 +115,7 @@
                 <tr class="hover:bg-white/5 transition-colors">
                     <td class="px-8 py-6">
                         <button onclick="openModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4 text-left">${t.team_name}</button>
-                        <div class="mt-3 flex items-center gap-2"><span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span><input type="text" class="team-code-input text-[11px]" value="${t.team_code || ''}" onchange="updateTeamCode('${t.id}', this.value)"></div>
+                        <div class="mt-3 flex items-center gap-2"><span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span><input type="text" class="team-code-input" value="${t.team_code || ''}" onchange="updateTeamCode('${t.id}', this.value)"></div>
                     </td>
                     <td class="px-8 py-6 text-center">
                         <div class="flex flex-col items-center gap-3">
@@ -120,7 +123,7 @@
                                 <button onclick="controlTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2.5 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl transition-all"><i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i></button>
                                 <button onclick="controlTimer('${t.id}', 'reset')" class="p-2 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-all"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                             </div>
-                            <div class="text-sm font-black mono text-white" id="timer-${t.id}">${formatTime(t)}</div>
+                            <div class="text-xs font-black mono text-white" id="timer-${t.id}">${formatTime(t)}</div>
                         </div>
                     </td>
                     <td class="px-8 py-6 text-center">
@@ -132,11 +135,11 @@
                     <td class="px-8 py-6 text-center">
                         <div class="flex justify-center gap-3">
                             <button onclick="togglePrivateSpk('${teamPeerId}')" class="p-3 rounded-2xl border border-white/5 transition-all ${isPrivateSpk ? 'spk-active shadow-blue-900/40' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateSpk ? 'volume-2' : 'volume-x'}" class="w-5 h-5"></i></button>
-                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-3 rounded-2xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-5 h-5"></i></button>
+                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-3 rounded-2xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active shadow-red-900/40' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-5 h-5"></i></button>
                         </div>
                     </td>
                     <td class="px-8 py-6 text-right">
-                        ${t.last_lat ? `<button onclick="openModal('${t.id}')" class="flex flex-col items-end gap-1"><span class="text-[10px] font-black text-emerald-500 animate-pulse">● CANLI TAKİP</span><span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Haritada Gör</span></button>` : `<span class="text-[9px] text-slate-700 font-bold uppercase">SİNYAL YOK</span>`}
+                        ${t.last_lat ? `<button onclick="openModal('${t.id}')" class="flex flex-col items-end gap-1"><span class="text-[10px] font-black text-emerald-500 animate-pulse">● CANLI İZLE</span><span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Rota Analizi</span></button>` : `<span class="text-[9px] text-slate-700 font-bold uppercase">GPS SİNYALİ YOK</span>`}
                     </td>
                 </tr>`}).join('');
             lucide.createIcons();
@@ -164,7 +167,10 @@
         async function upOutgoing() {
             if (!myStream) { try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) { return; } }
             myStream.getAudioTracks()[0].enabled = isGlobalMicOn || privateMicTarget !== null;
-            Object.keys(activeCalls).forEach(id => { const s = activeCalls[id].peerConnection.getSenders().find(s => s.track?.kind === 'audio'); if (s) s.track.enabled = (isGlobalMicOn || privateMicTarget === id); });
+            Object.keys(activeCalls).forEach(id => { 
+                const s = activeCalls[id].peerConnection.getSenders().find(s => s.track?.kind === 'audio'); 
+                if (s) s.track.enabled = (isGlobalMicOn || privateMicTarget === id); 
+            });
             render();
         }
         function toggleGlobalMic() { isGlobalMicOn = !isGlobalMicOn; if (isGlobalMicOn) privateMicTarget = null; upOutgoing(); upGlobalUI(); }
@@ -174,9 +180,9 @@
         function applySpk() { document.querySelectorAll('#audioPlayers audio').forEach(a => { const id = a.id.replace('audio-', ''); a.muted = !isGlobalSpkOn && privateSpkTarget !== id; }); render(); }
         function upGlobalUI() {
             const mB = document.getElementById('globalMicBtn'), mI = document.getElementById('globalMicIcon'), sB = document.getElementById('globalSpkBtn'), sI = document.getElementById('globalSpkIcon');
-            mB.className = isGlobalMicOn ? "px-8 py-4 bg-red-600 text-white rounded-xl font-black text-[11px] mic-active" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px] hover:bg-slate-700";
+            mB.className = isGlobalMicOn ? "px-8 py-4 bg-red-600 text-white rounded-xl font-black text-[11px] mic-active" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px]";
             mI.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
-            sB.className = isGlobalSpkOn ? "px-8 py-4 bg-blue-600 text-white rounded-xl font-black text-[11px] spk-active shadow-blue-900/40" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px] hover:bg-slate-700";
+            sB.className = isGlobalSpkOn ? "px-8 py-4 bg-blue-600 text-white rounded-xl font-black text-[11px] spk-active" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px]";
             sI.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
             lucide.createIcons();
         }
@@ -188,9 +194,36 @@
         
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mapH = t.last_lat ? `<div class="mb-8"><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">CANLI KONUM ANALİZİ</h4><iframe class="w-full h-[280px] rounded-[2rem] border-4 border-white/5 shadow-2xl" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed"></iframe></div>` : '';
-            let mH = (t.members || []).map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3"><span class="font-black text-red-500 uppercase text-[10px]">${i === 0 ? '👑 Ekip Lideri' : i+1+'. Üye'}: ${m.name}</span><div class="grid grid-cols-2 gap-4 text-[9px] text-slate-400 font-bold uppercase mt-3"><div><i data-lucide="phone" class="w-3 h-3 inline mr-1"></i> ${m.phone}</div><div><i data-lucide="graduation-cap" class="w-3 h-3 inline mr-1"></i> ${m.dept}</div></div></div>`).join('');
-            document.getElementById('modalBody').innerHTML = `<h2 class="text-2xl font-black uppercase text-white mb-8 leading-none">${t.team_name}</h2><div class="modal-content">${mapH}${mH}</div>`;
+            
+            // Rota Çizgisi Oluşturma (Google Maps Polyline URL Mantığı)
+            let pathString = "";
+            if(t.path_history && t.path_history.length > 0) {
+                pathString = "&path=color:0x0000ff|weight:5";
+                t.path_history.slice(-20).forEach(p => pathString += `|${p.lat},${p.lng}`);
+            }
+
+            let mapH = t.last_lat ? `<div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">CANLI ROTA ANALİZİ</h4>
+                    <span class="text-[9px] bg-red-600/20 text-red-500 px-2 py-1 rounded font-bold uppercase">Breadcrumb Aktif</span>
+                </div>
+                <iframe class="w-full h-[320px] rounded-[2.5rem] border-4 border-white/5 shadow-2xl" 
+                    src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed${pathString}">
+                </iframe>
+                <p class="text-[8px] text-slate-600 mt-3 italic">*Mavi çizgi takımın son 20 konum kaydını (rotayı) temsil eder.</p>
+            </div>` : '';
+
+            let mH = (t.members || []).map((m, i) => `
+                <div class="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 mb-3 flex justify-between items-center">
+                    <div>
+                        <span class="font-black text-red-500 uppercase text-[10px] tracking-widest">${i === 0 ? '👑 LİDER' : i+1+'. ÜYE'}</span>
+                        <h4 class="text-sm font-bold text-white mt-1">${m.name}</h4>
+                        <div class="text-[9px] text-slate-500 uppercase mt-1 font-bold">${m.dept} | ${m.class}. Sınıf</div>
+                    </div>
+                    <a href="tel:${m.phone}" class="p-3 bg-white/5 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all"><i data-lucide="phone" class="w-4 h-4"></i></a>
+                </div>`).join('');
+
+            document.getElementById('modalBody').innerHTML = `<h2 class="text-3xl font-black uppercase text-white mb-8 leading-none tracking-tighter">${t.team_name}</h2><div class="modal-content">${mapH}${mH}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
