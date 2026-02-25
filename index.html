@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- WebRTC Canlı Ses Kütüphanesi -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
@@ -19,57 +18,37 @@
         .btn-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
         .penalty-btn { font-size: 8px; font-weight: 800; padding: 5px 0; border-radius: 6px; transition: all 0.2s; width: 34px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
         .penalty-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        
         .mic-active { background: #ef4444 !important; animation: pulse-red 1.5s infinite; border-color: #ef4444 !important; color: white !important; }
         .spk-active { background: #3b82f6 !important; border-color: #3b82f6 !important; color: white !important; }
-        
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .modal-content { max-height: 70vh; overflow-y: auto; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
-
-        .team-code-input {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 0.5rem;
-            padding: 0.25rem 0.5rem;
-            width: 80px;
-            text-align: center;
-            font-family: monospace;
-            font-weight: bold;
-            color: #ef4444;
-            text-transform: uppercase;
-            outline: none;
-            transition: all 0.3s;
-        }
-        .team-code-input:focus { border-color: #ef4444; background: rgba(0,0,0,0.6); }
+        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 80px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2"></div>
 
-    <!-- TAKIM DETAY MODAL -->
-    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none p-4 transition-opacity duration-300">
-        <div class="glass w-full max-w-2xl rounded-[2rem] p-8 relative border-t-4 border-red-700 text-white">
+    <!-- TAKIM DETAY MODAL (CANLI HARİTA EKLENDİ) -->
+    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity">
+        <div class="glass w-full max-w-2xl rounded-[2.5rem] p-8 relative border-t-4 border-red-700 text-white">
             <button onclick="closeModal()" class="absolute top-6 right-6 p-2 glass rounded-full hover:text-red-500"><i data-lucide="x"></i></button>
             <div id="modalBody"></div>
         </div>
     </div>
 
-    <!-- GENEL SES KONTROL MERKEZİ -->
+    <!-- SES KOMUTA MERKEZİ -->
     <div class="max-w-7xl mx-auto mb-8 glass rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 border-b-2 border-red-900/30 shadow-2xl">
-        <div class="flex items-center gap-4 text-white">
+        <div class="flex items-center gap-4 text-white text-left">
             <div id="callStatusIcon" class="p-4 bg-slate-800 rounded-2xl transition-colors"><i data-lucide="radio" id="activeMicIcon"></i></div>
-            <div>
-                <h3 class="font-black uppercase text-sm tracking-widest leading-none">KOMUTA MERKEZİ</h3>
-                <p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sinyal Bekleniyor...</p>
-            </div>
+            <div><h3 class="font-black uppercase text-sm tracking-widest leading-none">KOMUTA MERKEZİ</h3><p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sinyal Bekleniyor...</p></div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10">
+            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all">
                 <i data-lucide="volume-x" id="globalSpkIcon"></i> GENEL HOPARLÖR
             </button>
-            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10">
+            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all">
                 <i data-lucide="mic-off" id="globalMicIcon"></i> GENEL MİKROFON
             </button>
         </div>
@@ -77,13 +56,10 @@
 
     <!-- ANA PANEL -->
     <div class="max-w-7xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
-            <div class="flex items-center gap-4 text-white">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 text-white text-left">
+            <div class="flex items-center gap-4">
                 <div class="p-3 bg-red-700 rounded-2xl shadow-xl shadow-red-900/30"><i data-lucide="shield-check"></i></div>
-                <div>
-                    <h1 class="text-2xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1>
-                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı Görüşme</p>
-                </div>
+                <div><h1 class="text-2xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı Görüşme</p></div>
             </div>
             <button onclick="fetchTeams()" class="p-4 glass rounded-xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refreshIcon"></i></button>
         </header>
@@ -91,20 +67,13 @@
         <div class="glass rounded-[2rem] overflow-hidden shadow-2xl border border-white/5">
             <table class="w-full text-left text-white border-collapse">
                 <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    <tr>
-                        <th class="px-6 py-5">Takım Bilgisi</th>
-                        <th class="px-6 py-5">Süre / Kontrol</th>
-                        <th class="px-6 py-5 text-center">Ceza (+/-)</th>
-                        <th class="px-6 py-5 text-center">Özel Ses Kontrol</th>
-                        <th class="px-6 py-5 text-right">Durum</th>
-                    </tr>
+                    <tr><th class="px-6 py-5">Takım Bilgisi</th><th class="px-6 py-5">Süre / Kontrol</th><th class="px-6 py-5 text-center">Ceza (+/-)</th><th class="px-6 py-5 text-center">Özel Ses</th><th class="px-6 py-5 text-right">Canlı Konum</th></tr>
                 </thead>
                 <tbody id="teamsBody" class="divide-y divide-white/5 text-sm"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Gizli Ses Playerları -->
     <div id="audioPlayers" class="hidden"></div>
 
     <script>
@@ -112,11 +81,8 @@
         const SUPABASE_KEY = 'sb_publishable_2lmWYp5Pkvn_BsADVHPKug_KK9n8v2-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let teamsData = [], peer = null, myStream = null;
-        let isGlobalMicOn = false, isGlobalSpkOn = false;
-        let activeCalls = {};
-        let privateMicTarget = null;
-        let privateSpkTarget = null;
+        let teamsData = [], peer = null, myStream = null, isGlobalMicOn = false, isGlobalSpkOn = false;
+        let activeCalls = {}, privateMicTarget = null, privateSpkTarget = null;
 
         function showToast(msg, isErr = false) {
             const div = document.createElement('div');
@@ -132,13 +98,8 @@
 
         async function updateTeamCode(id, newCode) {
             const cleanCode = newCode.trim().toUpperCase();
-            const { error } = await supabaseClient.from('registrations').update({ team_code: cleanCode }).eq('id', id);
-            if (!error) {
-                showToast("TAKIM KODU GÜNCELLENDİ: " + cleanCode);
-                fetchTeams();
-            } else {
-                showToast("KOD GÜNCELLENEMEDİ!", true);
-            }
+            await supabaseClient.from('registrations').update({ team_code: cleanCode }).eq('id', id);
+            showToast("KOD GÜNCELLENDİ"); fetchTeams();
         }
 
         function render() {
@@ -152,212 +113,79 @@
                 <tr class="hover:bg-white/5 transition-colors">
                     <td class="px-6 py-4">
                         <button onclick="openModal('${t.id}')" class="font-bold uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4 text-left">${t.team_name}</button>
-                        <div class="mt-2 flex items-center gap-2">
-                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">KOD:</span>
-                            <input type="text" class="team-code-input" value="${t.team_code || ''}" 
-                                   onchange="updateTeamCode('${t.id}', this.value)" placeholder="---">
-                        </div>
+                        <div class="mt-2 flex items-center gap-2"><span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span><input type="text" class="team-code-input text-[10px]" value="${t.team_code || ''}" onchange="updateTeamCode('${t.id}', this.value)"></div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
-                            <button onclick="controlTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl transition-all">
-                                <i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="controlTimer('${t.id}', 'reset')" class="p-2 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-all">
-                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                            </button>
+                            <button onclick="controlTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl transition-all"><i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i></button>
+                            <button onclick="controlTimer('${t.id}', 'reset')" class="p-2 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-all"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                             <div class="text-xs font-black mono ml-2" id="timer-${t.id}">${formatTimeDisplay(t)}</div>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex flex-col gap-1 items-center">
-                            <div class="flex gap-1">
-                                <button onclick="penalty('${t.id}', 5)" class="penalty-btn btn-warning">+5</button>
-                                <button onclick="penalty('${t.id}', 15)" class="penalty-btn btn-warning">+15</button>
-                                <button onclick="penalty('${t.id}', 25)" class="penalty-btn btn-warning">+25</button>
-                            </div>
-                            <div class="flex gap-1">
-                                <button onclick="penalty('${t.id}', -5)" class="penalty-btn btn-info">-5</button>
-                                <button onclick="penalty('${t.id}', -15)" class="penalty-btn btn-info">-15</button>
-                                <button onclick="penalty('${t.id}', -25)" class="penalty-btn btn-info">-25</button>
-                            </div>
+                            <div class="flex gap-1"><button onclick="penalty('${t.id}', 5)" class="penalty-btn btn-warning">+5</button><button onclick="penalty('${t.id}', 15)" class="penalty-btn btn-warning">+15</button><button onclick="penalty('${t.id}', 25)" class="penalty-btn btn-warning">+25</button></div>
+                            <div class="flex gap-1"><button onclick="penalty('${t.id}', -5)" class="penalty-btn btn-info">-5</button><button onclick="penalty('${t.id}', -15)" class="penalty-btn btn-info">-15</button><button onclick="penalty('${t.id}', -25)" class="penalty-btn btn-info">-25</button></div>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <button onclick="togglePrivateSpk('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateSpk ? 'spk-active' : 'bg-slate-800 text-slate-400'}">
-                                <i data-lucide="${isPrivateSpk ? 'volume-2' : 'volume-x'}" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active' : 'bg-slate-800 text-slate-400'}">
-                                <i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-4 h-4"></i>
-                            </button>
+                            <button onclick="togglePrivateSpk('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateSpk ? 'spk-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateSpk ? 'volume-2' : 'volume-x'}" class="w-4 h-4"></i></button>
+                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-4 h-4"></i></button>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <span class="text-[9px] font-bold uppercase ${t.is_timer_running ? 'text-emerald-500 animate-pulse' : 'text-slate-600'}">
-                            ${t.is_timer_running ? '● Yarışıyor' : 'Beklemede'}
-                        </span>
+                        ${t.last_lat ? `<button onclick="openModal('${t.id}')" class="flex flex-col items-end gap-1"><span class="text-[9px] font-bold text-emerald-500 animate-pulse">● CANLI</span><span class="text-[8px] text-slate-500 uppercase">Haritada Gör</span></button>` : `<span class="text-[9px] text-slate-600 font-bold uppercase">Sinyal Yok</span>`}
                     </td>
                 </tr>`}).join('');
             lucide.createIcons();
         }
 
-        // --- PEERJS SES SİSTEMİ ---
+        // PEERJS SES
         function initVoice() {
             peer = new Peer('SDU_ADMIN_2026_VOICE');
-
-            peer.on('open', (id) => {
-                const statusTxt = document.getElementById('callStatusText');
-                const statusIcn = document.getElementById('callStatusIcon');
-                if(statusTxt) statusTxt.innerText = "HAKEM HATTI ÇEVRİMİÇİ";
-                if(statusIcn) statusIcn.className = "p-4 bg-emerald-600 rounded-2xl text-white";
-                showToast("Ses merkezi aktif edildi.");
-            });
-
+            peer.on('open', () => { document.getElementById('callStatusText').innerText = "HAKEM HATTI ÇEVRİMİÇİ"; document.getElementById('callStatusIcon').className = "p-4 bg-emerald-600 rounded-2xl text-white"; });
             peer.on('call', async (call) => {
-                if (!myStream) {
-                    try {
-                        myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                        myStream.getAudioTracks()[0].enabled = false;
-                    } catch(e) { showToast("Mikrofon hatası!", true); }
-                }
-                call.answer(myStream);
-                activeCalls[call.peer] = call;
-                call.on('stream', (remoteStream) => {
-                    playRemoteStream(call.peer, remoteStream);
-                });
-                call.on('close', () => delete activeCalls[call.peer]);
+                if (!myStream) { myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); myStream.getAudioTracks()[0].enabled = false; }
+                call.answer(myStream); activeCalls[call.peer] = call;
+                call.on('stream', (rs) => { playRemoteStream(call.peer, rs); });
             });
         }
-
-        function playRemoteStream(peerId, stream) {
-            let audio = document.getElementById('audio-' + peerId);
-            if (!audio) {
-                audio = document.createElement('audio');
-                audio.id = 'audio-' + peerId;
-                audio.autoplay = true;
-                document.getElementById('audioPlayers').appendChild(audio);
-            }
-            audio.srcObject = stream;
-            audio.muted = !isGlobalSpkOn && privateSpkTarget !== peerId;
+        function playRemoteStream(id, st) {
+            let audio = document.getElementById('audio-' + id);
+            if (!audio) { audio = document.createElement('audio'); audio.id = 'audio-' + id; audio.autoplay = true; document.getElementById('audioPlayers').appendChild(audio); }
+            audio.srcObject = st; audio.muted = !isGlobalSpkOn && privateSpkTarget !== id;
         }
-
-        // --- MİKROFON YÖNETİMİ ---
         async function updateOutgoingVoice() {
-            if (!myStream) {
-                try {
-                    myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                } catch(e) { return showToast("Mikrofon izni gerek!", true); }
-            }
-
-            const hardwareMicEnabled = isGlobalMicOn || privateMicTarget !== null;
-            myStream.getAudioTracks()[0].enabled = hardwareMicEnabled;
-
-            Object.keys(activeCalls).forEach(peerId => {
-                const call = activeCalls[peerId];
-                const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
-                if (sender) {
-                    sender.track.enabled = (isGlobalMicOn || privateMicTarget === peerId);
-                }
-            });
+            if (!myStream) { try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); } catch(e) { return; } }
+            myStream.getAudioTracks()[0].enabled = isGlobalMicOn || privateMicTarget !== null;
+            Object.keys(activeCalls).forEach(id => { const sender = activeCalls[id].peerConnection.getSenders().find(s => s.track?.kind === 'audio'); if (sender) sender.track.enabled = (isGlobalMicOn || privateMicTarget === id); });
             render();
         }
-
-        function toggleGlobalMic() {
-            isGlobalMicOn = !isGlobalMicOn;
-            if (isGlobalMicOn) privateMicTarget = null;
-            updateOutgoingVoice();
-            updateGlobalUI();
-        }
-
-        function togglePrivateMic(teamPeerId) {
-            if (privateMicTarget === teamPeerId) {
-                privateMicTarget = null;
-            } else {
-                privateMicTarget = teamPeerId;
-                isGlobalMicOn = false;
-            }
-            updateOutgoingVoice();
-            updateGlobalUI();
-        }
-
-        // --- HOPARLÖR YÖNETİMİ ---
-        function toggleGlobalSpeaker() {
-            isGlobalSpkOn = !isGlobalSpkOn;
-            if (isGlobalSpkOn) privateSpkTarget = null;
-            applySpeakerRules();
-            updateGlobalUI();
-        }
-
-        function togglePrivateSpk(teamPeerId) {
-            if (privateSpkTarget === teamPeerId) {
-                privateSpkTarget = null;
-            } else {
-                privateSpkTarget = teamPeerId;
-                isGlobalSpkOn = false;
-            }
-            applySpeakerRules();
-            updateGlobalUI();
-        }
-
-        function applySpeakerRules() {
-            document.querySelectorAll('#audioPlayers audio').forEach(audio => {
-                const peerId = audio.id.replace('audio-', '');
-                audio.muted = !isGlobalSpkOn && privateSpkTarget !== peerId;
-            });
-            render();
-        }
-
+        function toggleGlobalMic() { isGlobalMicOn = !isGlobalMicOn; if (isGlobalMicOn) privateMicTarget = null; updateOutgoingVoice(); updateGlobalUI(); }
+        function togglePrivateMic(id) { privateMicTarget = (privateMicTarget === id) ? null : id; if(privateMicTarget) isGlobalMicOn = false; updateOutgoingVoice(); updateGlobalUI(); }
+        function toggleGlobalSpeaker() { isGlobalSpkOn = !isGlobalSpkOn; if (isGlobalSpkOn) privateSpkTarget = null; applySpeakerRules(); updateGlobalUI(); }
+        function togglePrivateSpk(id) { privateSpkTarget = (privateSpkTarget === id) ? null : id; if(privateSpkTarget) isGlobalSpkOn = false; applySpeakerRules(); updateGlobalUI(); }
+        function applySpeakerRules() { document.querySelectorAll('#audioPlayers audio').forEach(a => { const id = a.id.replace('audio-', ''); a.muted = !isGlobalSpkOn && privateSpkTarget !== id; }); render(); }
         function updateGlobalUI() {
-            const mBtn = document.getElementById('globalMicBtn'), mIcon = document.getElementById('globalMicIcon');
-            const sBtn = document.getElementById('globalSpkBtn'), sIcon = document.getElementById('globalSpkIcon');
-            
-            if (mBtn && mIcon) {
-                mBtn.className = isGlobalMicOn ? "px-6 py-3 bg-red-600 text-white rounded-xl font-black text-xs mic-pulse border border-red-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
-                mIcon.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
-            }
-            
-            if (sBtn && sIcon) {
-                sBtn.className = isGlobalSpkOn ? "px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs border border-blue-500" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs hover:bg-slate-700 border border-white/10";
-                sIcon.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
-            }
-            
+            const mBtn = document.getElementById('globalMicBtn'), mIcon = document.getElementById('globalMicIcon'), sBtn = document.getElementById('globalSpkBtn'), sIcon = document.getElementById('globalSpkIcon');
+            mBtn.className = isGlobalMicOn ? "px-6 py-3 bg-red-600 text-white rounded-xl font-black text-xs mic-active" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs";
+            mIcon.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
+            sBtn.className = isGlobalSpkOn ? "px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs spk-active" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs";
+            sIcon.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
             lucide.createIcons();
         }
 
-        // --- YÖNETİM ---
-        function formatTimeDisplay(t) {
-            let s = Number(t.elapsed_seconds || 0);
-            if (t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000);
-            const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-        }
-
-        async function controlTimer(id, action) {
-            const t = teamsData.find(x => x.id === id); let up = {};
-            if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() };
-            else if(action === 'stop') up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) };
-            else if(action === 'reset') { if(!confirm('Takım süresi sıfırlansın mı?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; }
-            await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
-        }
-
-        async function penalty(id, mins) {
-            const t = teamsData.find(x => x.id === id);
-            const current = Number(t.elapsed_seconds || 0) + (t.is_timer_running && t.timer_started_at ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0);
-            const up = { elapsed_seconds: Math.max(0, current + (mins * 60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null };
-            await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams();
-        }
-
+        // YÖNETİM
+        function formatTimeDisplay(t) { let s = Number(t.elapsed_seconds || 0); if (t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
+        async function controlTimer(id, action) { const t = teamsData.find(x => x.id === id); let up = {}; if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() }; else if(action === 'stop') up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) }; else if(action === 'reset') { if(!confirm('Sıfırlansın mı?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; } await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
+        async function penalty(id, mins) { const t = teamsData.find(x => x.id === id); const current = Number(t.elapsed_seconds || 0) + (t.is_timer_running && t.timer_started_at ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0); const up = { elapsed_seconds: Math.max(0, current + (mins * 60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null }; await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
+        
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mHtml = t.members.map((m, i) => `
-                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3">
-                    <span class="font-bold text-red-500 uppercase text-xs">${i === 0 ? '👑 LİDER' : (i+1)+'. ÜYE'}: ${m.name}</span>
-                    <div class="grid grid-cols-2 gap-4 text-[10px] text-slate-400 font-bold uppercase mt-3">
-                        <div>TEL: ${m.phone}</div><div>SINIF: ${m.class}</div><div>BÖLÜM: ${m.dept}</div>
-                    </div>
-                </div>`).join('');
-            document.getElementById('modalBody').innerHTML = `<h2 class="text-xl font-black uppercase text-white mb-6">${t.team_name}</h2><div class="modal-content">${mHtml}</div>`;
+            let mapHtml = t.last_lat ? `<div class="mb-6"><h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Canlı Konum Haritası</h4><iframe class="w-full h-[250px] rounded-2xl border border-white/5" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=16&output=embed"></iframe></div>` : '';
+            let mHtml = t.members.map((m, i) => `<div class="p-3 rounded-xl bg-white/5 border border-white/5 mb-2"><span class="font-bold text-red-500 uppercase text-[10px]">${i === 0 ? 'Ekip Lideri' : i+1+'. Üye'}: ${m.name}</span><div class="grid grid-cols-2 gap-3 text-[9px] text-slate-400 font-bold uppercase mt-2"><div>TEL: ${m.phone}</div><div>BÖLÜM: ${m.dept}</div></div></div>`).join('');
+            document.getElementById('modalBody').innerHTML = `<h2 class="text-xl font-black uppercase text-white mb-6 leading-none">${t.team_name}</h2><div class="modal-content">${mapHtml}${mHtml}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
