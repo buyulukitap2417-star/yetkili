@@ -21,53 +21,52 @@
         .mic-active { background: #ef4444 !important; animation: pulse-red 1.5s infinite; border-color: #ef4444 !important; color: white !important; }
         .spk-active { background: #3b82f6 !important; border-color: #3b82f6 !important; color: white !important; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .modal-content { max-height: 70vh; overflow-y: auto; }
+        .modal-content { max-height: 80vh; overflow-y: auto; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
-        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 80px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
+        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 85px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2"></div>
 
-    <!-- TAKIM DETAY MODAL (CANLI HARİTA EKLENDİ) -->
-    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity">
-        <div class="glass w-full max-w-2xl rounded-[2.5rem] p-8 relative border-t-4 border-red-700 text-white">
-            <button onclick="closeModal()" class="absolute top-6 right-6 p-2 glass rounded-full hover:text-red-500"><i data-lucide="x"></i></button>
+    <!-- MODAL -->
+    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-2xl rounded-[3rem] p-10 relative border-t-4 border-red-700 text-white shadow-3xl">
+            <button onclick="closeModal()" class="absolute top-8 right-8 p-2 glass rounded-full hover:text-red-500"><i data-lucide="x"></i></button>
             <div id="modalBody"></div>
         </div>
     </div>
 
-    <!-- SES KOMUTA MERKEZİ -->
-    <div class="max-w-7xl mx-auto mb-8 glass rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 border-b-2 border-red-900/30 shadow-2xl">
-        <div class="flex items-center gap-4 text-white text-left">
-            <div id="callStatusIcon" class="p-4 bg-slate-800 rounded-2xl transition-colors"><i data-lucide="radio" id="activeMicIcon"></i></div>
-            <div><h3 class="font-black uppercase text-sm tracking-widest leading-none">KOMUTA MERKEZİ</h3><p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Sinyal Bekleniyor...</p></div>
+    <!-- SES KOMUTA -->
+    <div class="max-w-7xl mx-auto mb-8 glass rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b-2 border-red-900/30 shadow-2xl">
+        <div class="flex items-center gap-5 text-white">
+            <div id="callStatusIcon" class="p-5 bg-slate-800 rounded-[1.5rem] transition-colors"><i data-lucide="radio" id="activeMicIcon"></i></div>
+            <div><h3 class="font-black uppercase text-base tracking-widest leading-none">SES MERKEZİ</h3><p id="callStatusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Bağlantı Bekleniyor</p></div>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all">
+        <div class="flex flex-wrap items-center gap-4">
+            <button id="globalSpkBtn" onclick="toggleGlobalSpeaker()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10 shadow-lg">
                 <i data-lucide="volume-x" id="globalSpkIcon"></i> GENEL HOPARLÖR
             </button>
-            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all">
+            <button id="globalMicBtn" onclick="toggleGlobalMic()" class="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-all border border-white/10 shadow-lg">
                 <i data-lucide="mic-off" id="globalMicIcon"></i> GENEL MİKROFON
             </button>
         </div>
     </div>
 
-    <!-- ANA PANEL -->
     <div class="max-w-7xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 text-white text-left">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-red-700 rounded-2xl shadow-xl shadow-red-900/30"><i data-lucide="shield-check"></i></div>
-                <div><h1 class="text-2xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı Görüşme</p></div>
+        <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+            <div class="flex items-center gap-4 text-white text-left">
+                <div class="p-3 bg-red-700 rounded-2xl shadow-2xl"><i data-lucide="shield-check"></i></div>
+                <div><h1 class="text-3xl font-black uppercase leading-none">SDÜ <span class="text-red-600">ADMİN</span></h1><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Saha Kontrol ve Canlı İzleme</p></div>
             </div>
-            <button onclick="fetchTeams()" class="p-4 glass rounded-xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refreshIcon"></i></button>
+            <button onclick="fetchTeams()" class="p-5 glass rounded-2xl text-white hover:bg-white/5 transition-all"><i data-lucide="refresh-cw" id="refreshIcon"></i></button>
         </header>
 
-        <div class="glass rounded-[2rem] overflow-hidden shadow-2xl border border-white/5">
+        <div class="glass rounded-[3rem] overflow-hidden shadow-2xl border border-white/5">
             <table class="w-full text-left text-white border-collapse">
-                <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    <tr><th class="px-6 py-5">Takım Bilgisi</th><th class="px-6 py-5">Süre / Kontrol</th><th class="px-6 py-5 text-center">Ceza (+/-)</th><th class="px-6 py-5 text-center">Özel Ses</th><th class="px-6 py-5 text-right">Canlı Konum</th></tr>
+                <thead class="bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <tr><th class="px-8 py-6">Takım ve Kod</th><th class="px-8 py-6 text-center">Süre / Kontrol</th><th class="px-8 py-6 text-center">Ceza (+/-)</th><th class="px-8 py-6 text-center">Özel Ses</th><th class="px-8 py-6 text-right">Canlı Takip</th></tr>
                 </thead>
                 <tbody id="teamsBody" class="divide-y divide-white/5 text-sm"></tbody>
             </table>
@@ -92,13 +91,13 @@
         }
 
         async function fetchTeams() {
-            const { data, error } = await supabaseClient.from('registrations').select('*').order('created_at', { ascending: false });
-            if (!error) { teamsData = data; render(); }
+            const { data } = await supabaseClient.from('registrations').select('*').order('created_at', { ascending: false });
+            if (data) { teamsData = data; render(); }
         }
 
         async function updateTeamCode(id, newCode) {
-            const cleanCode = newCode.trim().toUpperCase();
-            await supabaseClient.from('registrations').update({ team_code: cleanCode }).eq('id', id);
+            const clean = newCode.trim().toUpperCase();
+            await supabaseClient.from('registrations').update({ team_code: clean }).eq('id', id);
             showToast("KOD GÜNCELLENDİ"); fetchTeams();
         }
 
@@ -111,87 +110,93 @@
 
                 return `
                 <tr class="hover:bg-white/5 transition-colors">
-                    <td class="px-6 py-4">
-                        <button onclick="openModal('${t.id}')" class="font-bold uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4 text-left">${t.team_name}</button>
-                        <div class="mt-2 flex items-center gap-2"><span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span><input type="text" class="team-code-input text-[10px]" value="${t.team_code || ''}" onchange="updateTeamCode('${t.id}', this.value)"></div>
+                    <td class="px-8 py-6">
+                        <button onclick="openModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 underline decoration-red-700/30 underline-offset-4 text-left">${t.team_name}</button>
+                        <div class="mt-3 flex items-center gap-2"><span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span><input type="text" class="team-code-input text-[11px]" value="${t.team_code || ''}" onchange="updateTeamCode('${t.id}', this.value)"></div>
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            <button onclick="controlTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl transition-all"><i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i></button>
-                            <button onclick="controlTimer('${t.id}', 'reset')" class="p-2 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-all"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
-                            <div class="text-xs font-black mono ml-2" id="timer-${t.id}">${formatTimeDisplay(t)}</div>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="flex gap-2">
+                                <button onclick="controlTimer('${t.id}', '${t.is_timer_running ? 'stop' : 'start'}')" class="p-2.5 ${t.is_timer_running ? 'btn-danger' : 'btn-success'} rounded-xl transition-all"><i data-lucide="${t.is_timer_running ? 'pause' : 'play'}" class="w-4 h-4"></i></button>
+                                <button onclick="controlTimer('${t.id}', 'reset')" class="p-2 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-all"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                            </div>
+                            <div class="text-sm font-black mono text-white" id="timer-${t.id}">${formatTime(t)}</div>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-col gap-1 items-center">
-                            <div class="flex gap-1"><button onclick="penalty('${t.id}', 5)" class="penalty-btn btn-warning">+5</button><button onclick="penalty('${t.id}', 15)" class="penalty-btn btn-warning">+15</button><button onclick="penalty('${t.id}', 25)" class="penalty-btn btn-warning">+25</button></div>
-                            <div class="flex gap-1"><button onclick="penalty('${t.id}', -5)" class="penalty-btn btn-info">-5</button><button onclick="penalty('${t.id}', -15)" class="penalty-btn btn-info">-15</button><button onclick="penalty('${t.id}', -25)" class="penalty-btn btn-info">-25</button></div>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex flex-col gap-2 items-center">
+                            <div class="flex gap-2"><button onclick="penalty('${t.id}', 5)" class="penalty-btn btn-warning">+5</button><button onclick="penalty('${t.id}', 15)" class="penalty-btn btn-warning">+15</button><button onclick="penalty('${t.id}', 25)" class="penalty-btn btn-warning">+25</button></div>
+                            <div class="flex gap-2"><button onclick="penalty('${t.id}', -5)" class="penalty-btn btn-info">-5</button><button onclick="penalty('${t.id}', -15)" class="penalty-btn btn-info">-15</button><button onclick="penalty('${t.id}', -25)" class="penalty-btn btn-info">-25</button></div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="togglePrivateSpk('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateSpk ? 'spk-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateSpk ? 'volume-2' : 'volume-x'}" class="w-4 h-4"></i></button>
-                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-2.5 rounded-xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-4 h-4"></i></button>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex justify-center gap-3">
+                            <button onclick="togglePrivateSpk('${teamPeerId}')" class="p-3 rounded-2xl border border-white/5 transition-all ${isPrivateSpk ? 'spk-active shadow-blue-900/40' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateSpk ? 'volume-2' : 'volume-x'}" class="w-5 h-5"></i></button>
+                            <button onclick="togglePrivateMic('${teamPeerId}')" class="p-3 rounded-2xl border border-white/5 transition-all ${isPrivateMic ? 'mic-active' : 'bg-slate-800 text-slate-400'}"><i data-lucide="${isPrivateMic ? 'mic' : 'mic-off'}" class="w-5 h-5"></i></button>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-right">
-                        ${t.last_lat ? `<button onclick="openModal('${t.id}')" class="flex flex-col items-end gap-1"><span class="text-[9px] font-bold text-emerald-500 animate-pulse">● CANLI</span><span class="text-[8px] text-slate-500 uppercase">Haritada Gör</span></button>` : `<span class="text-[9px] text-slate-600 font-bold uppercase">Sinyal Yok</span>`}
+                    <td class="px-8 py-6 text-right">
+                        ${t.last_lat ? `<button onclick="openModal('${t.id}')" class="flex flex-col items-end gap-1"><span class="text-[10px] font-black text-emerald-500 animate-pulse">● CANLI TAKİP</span><span class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Haritada Gör</span></button>` : `<span class="text-[9px] text-slate-700 font-bold uppercase">SİNYAL YOK</span>`}
                     </td>
                 </tr>`}).join('');
             lucide.createIcons();
         }
 
-        // PEERJS SES
+        // PEERJS
         function initVoice() {
             peer = new Peer('SDU_ADMIN_2026_VOICE');
-            peer.on('open', () => { document.getElementById('callStatusText').innerText = "HAKEM HATTI ÇEVRİMİÇİ"; document.getElementById('callStatusIcon').className = "p-4 bg-emerald-600 rounded-2xl text-white"; });
+            peer.on('open', () => { 
+                const txt = document.getElementById('callStatusText');
+                if(txt) { txt.innerText = "HAKEM HATTI ÇEVRİMİÇİ"; txt.classList.replace('text-slate-500', 'text-emerald-500'); }
+                document.getElementById('callStatusIcon').className = "p-5 bg-emerald-600 rounded-[1.5rem] text-white";
+            });
             peer.on('call', async (call) => {
-                if (!myStream) { myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); myStream.getAudioTracks()[0].enabled = false; }
+                if (!myStream) { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); myStream.getAudioTracks()[0].enabled = false; }
                 call.answer(myStream); activeCalls[call.peer] = call;
-                call.on('stream', (rs) => { playRemoteStream(call.peer, rs); });
+                call.on('stream', (rs) => { playRemote(call.peer, rs); });
             });
         }
-        function playRemoteStream(id, st) {
-            let audio = document.getElementById('audio-' + id);
-            if (!audio) { audio = document.createElement('audio'); audio.id = 'audio-' + id; audio.autoplay = true; document.getElementById('audioPlayers').appendChild(audio); }
-            audio.srcObject = st; audio.muted = !isGlobalSpkOn && privateSpkTarget !== id;
+        function playRemote(id, st) {
+            let a = document.getElementById('audio-' + id);
+            if (!a) { a = document.createElement('audio'); a.id = 'audio-' + id; a.autoplay = true; document.getElementById('audioPlayers').appendChild(a); }
+            a.srcObject = st; a.muted = !isGlobalSpkOn && privateSpkTarget !== id;
         }
-        async function updateOutgoingVoice() {
-            if (!myStream) { try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); } catch(e) { return; } }
+        async function upOutgoing() {
+            if (!myStream) { try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) { return; } }
             myStream.getAudioTracks()[0].enabled = isGlobalMicOn || privateMicTarget !== null;
-            Object.keys(activeCalls).forEach(id => { const sender = activeCalls[id].peerConnection.getSenders().find(s => s.track?.kind === 'audio'); if (sender) sender.track.enabled = (isGlobalMicOn || privateMicTarget === id); });
+            Object.keys(activeCalls).forEach(id => { const s = activeCalls[id].peerConnection.getSenders().find(s => s.track?.kind === 'audio'); if (s) s.track.enabled = (isGlobalMicOn || privateMicTarget === id); });
             render();
         }
-        function toggleGlobalMic() { isGlobalMicOn = !isGlobalMicOn; if (isGlobalMicOn) privateMicTarget = null; updateOutgoingVoice(); updateGlobalUI(); }
-        function togglePrivateMic(id) { privateMicTarget = (privateMicTarget === id) ? null : id; if(privateMicTarget) isGlobalMicOn = false; updateOutgoingVoice(); updateGlobalUI(); }
-        function toggleGlobalSpeaker() { isGlobalSpkOn = !isGlobalSpkOn; if (isGlobalSpkOn) privateSpkTarget = null; applySpeakerRules(); updateGlobalUI(); }
-        function togglePrivateSpk(id) { privateSpkTarget = (privateSpkTarget === id) ? null : id; if(privateSpkTarget) isGlobalSpkOn = false; applySpeakerRules(); updateGlobalUI(); }
-        function applySpeakerRules() { document.querySelectorAll('#audioPlayers audio').forEach(a => { const id = a.id.replace('audio-', ''); a.muted = !isGlobalSpkOn && privateSpkTarget !== id; }); render(); }
-        function updateGlobalUI() {
-            const mBtn = document.getElementById('globalMicBtn'), mIcon = document.getElementById('globalMicIcon'), sBtn = document.getElementById('globalSpkBtn'), sIcon = document.getElementById('globalSpkIcon');
-            mBtn.className = isGlobalMicOn ? "px-6 py-3 bg-red-600 text-white rounded-xl font-black text-xs mic-active" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs";
-            mIcon.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
-            sBtn.className = isGlobalSpkOn ? "px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs spk-active" : "px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-xs";
-            sIcon.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
+        function toggleGlobalMic() { isGlobalMicOn = !isGlobalMicOn; if (isGlobalMicOn) privateMicTarget = null; upOutgoing(); upGlobalUI(); }
+        function togglePrivateMic(id) { privateMicTarget = (privateMicTarget === id) ? null : id; if(privateMicTarget) isGlobalMicOn = false; upOutgoing(); upGlobalUI(); }
+        function toggleGlobalSpeaker() { isGlobalSpkOn = !isGlobalSpkOn; if (isGlobalSpkOn) privateSpkTarget = null; applySpk(); upGlobalUI(); }
+        function togglePrivateSpk(id) { privateSpkTarget = (privateSpkTarget === id) ? null : id; if(privateSpkTarget) isGlobalSpkOn = false; applySpk(); upGlobalUI(); }
+        function applySpk() { document.querySelectorAll('#audioPlayers audio').forEach(a => { const id = a.id.replace('audio-', ''); a.muted = !isGlobalSpkOn && privateSpkTarget !== id; }); render(); }
+        function upGlobalUI() {
+            const mB = document.getElementById('globalMicBtn'), mI = document.getElementById('globalMicIcon'), sB = document.getElementById('globalSpkBtn'), sI = document.getElementById('globalSpkIcon');
+            mB.className = isGlobalMicOn ? "px-8 py-4 bg-red-600 text-white rounded-xl font-black text-[11px] mic-active" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px] hover:bg-slate-700";
+            mI.setAttribute('data-lucide', isGlobalMicOn ? 'mic' : 'mic-off');
+            sB.className = isGlobalSpkOn ? "px-8 py-4 bg-blue-600 text-white rounded-xl font-black text-[11px] spk-active shadow-blue-900/40" : "px-8 py-4 bg-slate-800 text-white rounded-xl font-black text-[11px] hover:bg-slate-700";
+            sI.setAttribute('data-lucide', isGlobalSpkOn ? 'volume-2' : 'volume-x');
             lucide.createIcons();
         }
 
         // YÖNETİM
-        function formatTimeDisplay(t) { let s = Number(t.elapsed_seconds || 0); if (t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
-        async function controlTimer(id, action) { const t = teamsData.find(x => x.id === id); let up = {}; if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() }; else if(action === 'stop') up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) }; else if(action === 'reset') { if(!confirm('Sıfırlansın mı?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; } await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
-        async function penalty(id, mins) { const t = teamsData.find(x => x.id === id); const current = Number(t.elapsed_seconds || 0) + (t.is_timer_running && t.timer_started_at ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0); const up = { elapsed_seconds: Math.max(0, current + (mins * 60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null }; await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
+        function formatTime(t) { let s = Number(t.elapsed_seconds || 0); if (t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
+        async function controlTimer(id, action) { const t = teamsData.find(x => x.id === id); let up = {}; if(action === 'start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() }; else if(action === 'stop') up = { is_timer_running: false, elapsed_seconds: Number(t.elapsed_seconds || 0) + Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) }; else if(action === 'reset') { if(!confirm('Sıfırla?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; } await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
+        async function penalty(id, mins) { const t = teamsData.find(x => x.id === id); const cur = Number(t.elapsed_seconds || 0) + (t.is_timer_running && t.timer_started_at ? Math.floor((Date.now() - new Date(t.timer_started_at).getTime()) / 1000) : 0); const up = { elapsed_seconds: Math.max(0, cur + (mins * 60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null }; await supabaseClient.from('registrations').update(up).eq('id', id); fetchTeams(); }
         
         function openModal(id) {
             const t = teamsData.find(x => x.id === id); if(!t) return;
-            let mapHtml = t.last_lat ? `<div class="mb-6"><h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Canlı Konum Haritası</h4><iframe class="w-full h-[250px] rounded-2xl border border-white/5" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=16&output=embed"></iframe></div>` : '';
-            let mHtml = t.members.map((m, i) => `<div class="p-3 rounded-xl bg-white/5 border border-white/5 mb-2"><span class="font-bold text-red-500 uppercase text-[10px]">${i === 0 ? 'Ekip Lideri' : i+1+'. Üye'}: ${m.name}</span><div class="grid grid-cols-2 gap-3 text-[9px] text-slate-400 font-bold uppercase mt-2"><div>TEL: ${m.phone}</div><div>BÖLÜM: ${m.dept}</div></div></div>`).join('');
-            document.getElementById('modalBody').innerHTML = `<h2 class="text-xl font-black uppercase text-white mb-6 leading-none">${t.team_name}</h2><div class="modal-content">${mapHtml}${mHtml}</div>`;
+            let mapH = t.last_lat ? `<div class="mb-8"><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">CANLI KONUM ANALİZİ</h4><iframe class="w-full h-[280px] rounded-[2rem] border-4 border-white/5 shadow-2xl" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed"></iframe></div>` : '';
+            let mH = (t.members || []).map((m, i) => `<div class="p-4 rounded-2xl bg-white/5 border border-white/5 mb-3"><span class="font-black text-red-500 uppercase text-[10px]">${i === 0 ? '👑 Ekip Lideri' : i+1+'. Üye'}: ${m.name}</span><div class="grid grid-cols-2 gap-4 text-[9px] text-slate-400 font-bold uppercase mt-3"><div><i data-lucide="phone" class="w-3 h-3 inline mr-1"></i> ${m.phone}</div><div><i data-lucide="graduation-cap" class="w-3 h-3 inline mr-1"></i> ${m.dept}</div></div></div>`).join('');
+            document.getElementById('modalBody').innerHTML = `<h2 class="text-2xl font-black uppercase text-white mb-8 leading-none">${t.team_name}</h2><div class="modal-content">${mapH}${mH}</div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none'); lucide.createIcons();
         }
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
 
         window.onload = () => { fetchTeams(); initVoice(); supabaseClient.channel('adm_sync').on('postgres_changes', { event:'*', schema:'public', table:'registrations' }, () => fetchTeams()).subscribe(); };
-        setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTimeDisplay(t); } }); }, 1000);
+        setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
         lucide.createIcons();
     </script>
 </body>
