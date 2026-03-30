@@ -12,74 +12,120 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; overflow-x: hidden; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .tab-btn.active { border-bottom: 3px solid #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05); }
-        .penalty-btn { font-size: 10px; font-weight: 800; padding: 6px; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
-        .mic-active { background: #ef4444 !important; animation: pulse 1.5s infinite; border-color: #ef4444 !important; color: white !important; }
+        .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; opacity: 0.5; }
+        .tab-btn.active { border-color: #ef4444; color: #ef4444; opacity: 1; background: rgba(239, 68, 68, 0.05); }
+        
+        .penalty-btn { font-size: 10px; font-weight: 800; width: 38px; height: 30px; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+        .penalty-btn:active { transform: scale(0.9); }
+        
+        .mic-active { background: #ef4444 !important; animation: pulse-mic 1.5s infinite; border-color: #ef4444 !important; color: white !important; }
         .spk-active { background: #3b82f6 !important; border-color: #3b82f6 !important; color: white !important; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        @keyframes pulse-mic { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
-        .team-code-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 4px 8px; width: 90px; text-align: center; font-weight: bold; color: #ef4444; outline: none; }
+        .modal-content { max-height: 85vh; overflow-y: auto; }
+        
+        .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 100px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
         .team-code-input:focus { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2"></div>
+<body class="p-4 md:p-8 text-center">
+    <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2 text-left"></div>
     <div id="audioPlayers" class="hidden"></div>
 
-    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/95 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity">
-        <div class="glass w-full max-w-3xl rounded-[2.5rem] p-8 relative border-t-4 border-red-700 shadow-3xl">
-            <button onclick="closeModal()" class="absolute top-6 right-6 p-2 glass rounded-full hover:text-red-500"><i data-lucide="x"></i></button>
-            <div id="modalBody" class="max-h-[85vh] overflow-y-auto pr-2"></div>
+    <!-- TAKIM/HAKEM DETAY MODAL -->
+    <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-3xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-red-700 text-white shadow-3xl text-left">
+            <button onclick="closeModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
+            <div id="modalBody" class="modal-content pr-2"></div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <header class="flex justify-between items-center glass p-6 rounded-3xl border border-white/5 shadow-2xl">
-            <div class="flex items-center gap-4">
-                <div class="p-4 bg-red-700 rounded-2xl"><i data-lucide="shield-check" class="text-white"></i></div>
-                <div><h1 class="text-xl font-black uppercase">SDÜ <span class="text-red-600">KOMUTA</span></h1><p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">OPERASYON MERKEZİ</p></div>
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-center glass p-6 rounded-3xl gap-4 shadow-2xl border border-white/5">
+            <div class="flex items-center gap-4 text-left">
+                <div class="p-4 bg-red-700 rounded-2xl shadow-xl shadow-red-900/20"><i data-lucide="shield-check" class="text-white"></i></div>
+                <div>
+                    <h1 class="text-2xl font-black uppercase leading-none">SDÜ <span class="text-red-600">KOMUTA</span></h1>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-1" id="connStatusText">HAT BAŞLATILIYOR...</p>
+                </div>
             </div>
-            <div class="flex bg-black/40 p-1 rounded-xl border border-white/10">
-                <button onclick="switchTab('teams')" id="tTeams" class="tab-btn active px-6 py-2 text-[10px] font-black uppercase">Yarışmacılar</button>
-                <button onclick="switchTab('refs')" id="tRefs" class="tab-btn px-6 py-2 text-[10px] font-black uppercase">Hakemler</button>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="manualVoiceReset()" class="p-3 glass rounded-xl text-slate-400 hover:text-emerald-500 transition-colors" title="Ses Sistemini Resetle">
+                    <i data-lucide="refresh-cw" id="voiceResetIcon"></i>
+                </button>
+                <div class="flex bg-black/40 p-1 rounded-xl border border-white/10">
+                    <button onclick="switchTab('teams')" id="btnTabTeams" class="tab-btn active px-8 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest">Yarışmacılar</button>
+                    <button onclick="switchTab('refs')" id="btnTabRefs" class="tab-btn px-8 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest">Hakemler</button>
+                </div>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="glass p-6 rounded-3xl border-l-4 border-red-600">
-                <p class="text-[9px] font-black text-slate-500 uppercase mb-4 tracking-widest">Yarışmacı Genel Hattı</p>
-                <div class="flex gap-2">
-                    <button id="tmSpk" onclick="toggleTSpk()" class="flex-1 py-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2"><i data-lucide="volume-x"></i>DUY</button>
-                    <button id="tmMic" onclick="toggleTMic()" class="flex-1 py-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2"><i data-lucide="mic-off"></i>ANONS</button>
+        <!-- TELSİZ MERKEZİ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="glass p-6 rounded-[2rem] border-l-4 border-red-600 relative overflow-hidden text-left">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Yarışmacı Genel Hattı</p>
+                <div class="flex gap-4">
+                    <button id="tmSpk" onclick="toggleTSpk()" class="flex-1 py-4 glass rounded-2xl text-[11px] font-black uppercase flex flex-col items-center gap-2 transition-all"><i data-lucide="volume-x"></i>DUY</button>
+                    <button id="tmMic" onclick="toggleTMic()" class="flex-1 py-4 glass rounded-2xl text-[11px] font-black uppercase flex flex-col items-center gap-2 transition-all"><i data-lucide="mic-off"></i>ANONS</button>
                 </div>
             </div>
-            <div class="glass p-6 rounded-3xl border-l-4 border-emerald-600">
-                <p class="text-[9px] font-black text-slate-500 uppercase mb-4 tracking-widest">Hakem Genel Hattı</p>
-                <div class="flex gap-2">
-                    <button id="rfSpk" onclick="toggleRSpk()" class="flex-1 py-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2"><i data-lucide="volume-x"></i>DUY</button>
-                    <button id="rfMic" onclick="toggleRMic()" class="flex-1 py-4 glass rounded-2xl text-[10px] font-black uppercase flex flex-col items-center gap-2"><i data-lucide="mic-off"></i>ANONS</button>
+            <div class="glass p-6 rounded-[2rem] border-l-4 border-emerald-600 relative overflow-hidden text-left">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Hakem Genel Hattı</p>
+                <div class="flex gap-4">
+                    <button id="rfSpk" onclick="toggleRSpk()" class="flex-1 py-4 glass rounded-2xl text-[11px] font-black uppercase flex flex-col items-center gap-2 transition-all"><i data-lucide="volume-x"></i>DUY</button>
+                    <button id="rfMic" onclick="toggleRMic()" class="flex-1 py-4 glass rounded-2xl text-[11px] font-black uppercase flex flex-col items-center gap-2 transition-all"><i data-lucide="mic-off"></i>ANONS</button>
                 </div>
             </div>
         </div>
 
-        <div id="panelTeams" class="glass rounded-[2.5rem] overflow-hidden border border-white/5">
-            <table class="w-full text-left text-white">
+        <!-- YARIŞMACILAR PANELİ -->
+        <div id="panelTeams" class="glass rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
+            <table class="w-full text-left text-white border-collapse">
                 <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    <tr><th class="px-8 py-6">Takım ve Kod</th><th class="px-8 py-6 text-center">Süre Kontrol</th><th class="px-8 py-6 text-center">Ceza</th><th class="px-8 py-6 text-center">Özel Telsiz</th><th class="px-8 py-6 text-right">Durum</th></tr>
+                    <tr>
+                        <th class="px-8 py-6">Takım ve Kod</th>
+                        <th class="px-8 py-6 text-center">Süre Kontrol</th>
+                        <th class="px-8 py-6 text-center">Ceza / Bonus</th>
+                        <th class="px-8 py-6 text-center">Özel Telsiz</th>
+                        <th class="px-8 py-6 text-right">Canlı İzle</th>
+                    </tr>
                 </thead>
                 <tbody id="teamsBody" class="divide-y divide-white/5 text-sm"></tbody>
             </table>
         </div>
 
+        <!-- HAKEMLER PANELİ -->
         <div id="panelRefs" class="hidden space-y-4">
-            <div class="glass p-6 rounded-3xl flex justify-between items-center gap-4">
-                <input type="text" id="rn" placeholder="Hakem Adı" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs flex-1 text-white">
-                <input type="text" id="rc" placeholder="Kod" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs w-24 text-emerald-500 font-bold uppercase">
-                <button onclick="addRef()" class="px-8 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase">Hakem Ekle</button>
+            <div class="glass p-8 rounded-[2rem] flex flex-wrap items-center justify-between gap-6 border border-white/5">
+                <div class="flex gap-4 flex-1 min-w-[300px]">
+                    <div class="flex-1 space-y-2 text-left">
+                        <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Hakem Adı</label>
+                        <input type="text" id="newRefName" placeholder="Örn: Nokta 1 Hakemi" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div class="w-40 space-y-2 text-left">
+                        <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Giriş Kodu</label>
+                        <input type="text" id="newRefCode" placeholder="HAKEM01" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white uppercase font-mono">
+                    </div>
+                </div>
+                <button onclick="addReferee()" class="mt-6 px-10 py-3.5 bg-emerald-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-emerald-500 active:scale-95 transition-all">Hakem Kaydet</button>
             </div>
-            <div class="glass rounded-[2rem] overflow-hidden">
-                <table class="w-full text-left text-white">
+            
+            <div class="glass rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
+                <table class="w-full text-left text-white border-collapse">
+                    <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        <tr>
+                            <th class="px-8 py-6">Görevli Hakem</th>
+                            <th class="px-8 py-6">Giriş Kodu</th>
+                            <th class="px-8 py-6 text-center">Özel Telsiz</th>
+                            <th class="px-8 py-6 text-right">Konum</th>
+                            <th class="px-8 py-6 text-center">İşlem</th>
+                        </tr>
+                    </thead>
                     <tbody id="refsBody" class="divide-y divide-white/5 text-sm"></tbody>
                 </table>
             </div>
@@ -94,70 +140,190 @@
         let teamsData = [], refsData = [], reportsData = [], peer = null, myStream = null;
         let activeCalls = {}, privateMicId = null, privateSpkId = null;
         let tmSpk = false, tmMic = false, rfSpk = false, rfMic = false;
+        let isInitializing = false;
+
+        // BroadcastChannel ile aynı anda sadece bir Admin sekmesinin aktif olmasını sağlıyoruz
+        const adminChannel = new BroadcastChannel('sdu_ory_admin_check');
+        adminChannel.onmessage = (event) => {
+            if (event.data === 'ping' && peer && peer.open) {
+                adminChannel.postMessage('pong');
+            } else if (event.data === 'pong') {
+                // Başka bir admin sekmesi zaten açık!
+                document.getElementById('connStatusText').innerText = "HATA: BAŞKA BİR ADMİN SEKMESİ AÇIK!";
+                document.getElementById('connStatusText').style.color = "#ef4444";
+                showToast("ID Çakışması! Lütfen diğer Admin sekmelerini kapatın.", true);
+            }
+        };
 
         async function fetchData() {
-            const { data: t } = await supabaseClient.from('registrations').select('*').order('team_name');
-            const { data: r } = await supabaseClient.from('referees').select('*').order('name');
-            const { data: rp } = await supabaseClient.from('referee_reports').select('*, referees(name)');
-            teamsData = t || []; refsData = r || []; reportsData = rp || []; render();
+            try {
+                const { data: t } = await supabaseClient.from('registrations').select('*').order('team_name');
+                const { data: r } = await supabaseClient.from('referees').select('*').order('name');
+                const { data: rp } = await supabaseClient.from('referee_reports').select('*, referees(name)');
+                teamsData = t || []; refsData = r || []; reportsData = rp || []; render();
+            } catch (e) { console.error("Veri çekme hatası:", e); }
         }
 
         function switchTab(t) {
             document.getElementById('panelTeams').classList.toggle('hidden', t !== 'teams');
             document.getElementById('panelRefs').classList.toggle('hidden', t !== 'refs');
-            document.getElementById('tTeams').classList.toggle('active', t === 'teams');
-            document.getElementById('tRefs').classList.toggle('active', t === 'refs');
+            document.getElementById('btnTabTeams').classList.toggle('active', t === 'teams');
+            document.getElementById('btnTabRefs').classList.toggle('active', t === 'refs');
         }
 
         function render() {
             document.getElementById('teamsBody').innerHTML = teamsData.map(t => {
                 const pid = 'SDU_TEAM_' + t.id.substring(0,8);
                 return `<tr class="hover:bg-white/5 transition-colors">
-                    <td class="px-8 py-6">
-                        <button onclick="openTeam('${t.id}')" class="font-black uppercase text-white hover:text-red-500">${t.team_name}</button>
-                        <div class="mt-2"><input type="text" class="team-code-input text-[10px]" value="${t.team_code||''}" onchange="updateCode('${t.id}',this.value)"></div>
-                    </td>
-                    <td class="px-8 py-6 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                            <button onclick="timerCtrl('${t.id}','${t.is_timer_running?'stop':'start'}')" class="p-2 rounded-lg ${t.is_timer_running?'bg-red-500/20 text-red-500':'bg-emerald-500/20 text-emerald-500'}"><i data-lucide="${t.is_timer_running?'pause':'play'}" class="w-4 h-4"></i></button>
-                            <button onclick="timerCtrl('${t.id}','reset')" class="p-2 rounded-lg bg-slate-800 text-slate-500"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
-                            <span class="text-xs font-black mono w-16" id="timer-${t.id}">${formatTime(t)}</span>
+                    <td class="px-8 py-6 text-left">
+                        <button onclick="openTeamModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 transition-colors">${t.team_name}</button>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span>
+                            <input type="text" class="team-code-input text-[11px]" value="${t.team_code||''}" onchange="updateTeamCode('${t.id}',this.value)">
                         </div>
                     </td>
-                    <td class="px-8 py-6 text-center"><div class="flex gap-1 justify-center"><button onclick="penalty('${t.id}',5)" class="penalty-btn bg-orange-500/10 text-orange-500">+5</button><button onclick="penalty('${t.id}',25)" class="penalty-btn bg-orange-500/20 text-orange-500">+25</button><button onclick="penalty('${t.id}',-5)" class="penalty-btn bg-blue-500/10 text-blue-500">-5</button></div></td>
-                    <td class="px-8 py-6 text-center"><div class="flex gap-2 justify-center"><button onclick="togglePriSpk('${pid}')" class="p-3 rounded-xl border border-white/5 transition-all ${privateSpkId===pid?'spk-active':'bg-slate-800 text-slate-400'}"><i data-lucide="${privateSpkId===pid?'volume-2':'volume-x'}" class="w-5 h-5"></i></button><button onclick="togglePriMic('${pid}')" class="p-3 rounded-xl border border-white/5 transition-all ${privateMicId===pid?'mic-active':'bg-slate-800 text-slate-400'}"><i data-lucide="${privateMicId===pid?'mic':'mic-off'}" class="w-5 h-5"></i></button></div></td>
-                    <td class="px-8 py-6 text-right">${t.last_lat ? '<span class="text-emerald-500 text-[10px] font-black animate-pulse">● CANLI</span>' : '<span class="text-slate-800 text-[9px]">Kapalı</span>'}</td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex items-center justify-center gap-3">
+                            <button onclick="timerCtrl('${t.id}','${t.is_timer_running?'stop':'start'}')" class="p-2.5 rounded-xl ${t.is_timer_running?'bg-red-500/20 text-red-500':'bg-emerald-500/20 text-emerald-500'} transition-all"><i data-lucide="${t.is_timer_running?'pause':'play'}" class="w-5 h-5"></i></button>
+                            <button onclick="timerCtrl('${t.id}','reset')" class="p-2.5 rounded-xl bg-slate-800 text-slate-500 hover:text-white transition-all"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                            <span class="text-sm font-black mono w-20 text-center" id="timer-${t.id}">${formatTime(t)}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex gap-1.5 justify-center">
+                            <button onclick="applyPenalty('${t.id}',5)" class="penalty-btn bg-orange-500/10 text-orange-500">+5</button>
+                            <button onclick="applyPenalty('${t.id}',25)" class="penalty-btn bg-orange-500/20 text-orange-500 font-black">+25</button>
+                            <button onclick="applyPenalty('${t.id}',-5)" class="penalty-btn bg-blue-500/10 text-blue-500">-5</button>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex justify-center gap-3">
+                            <button onclick="togglePriSpk('${pid}')" class="p-3 rounded-2xl border border-white/5 ${privateSpkId===pid?'spk-active':'bg-slate-800 text-slate-400'} transition-all"><i data-lucide="${privateSpkId===pid?'volume-2':'volume-x'}" class="w-5 h-5"></i></button>
+                            <button onclick="togglePriMic('${pid}')" class="p-3 rounded-2xl border border-white/5 ${privateMicId===pid?'mic-active shadow-red-900/40':'bg-slate-800 text-slate-400'} transition-all"><i data-lucide="${privateMicId===pid?'mic':'mic-off'}" class="w-5 h-5"></i></button>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        ${t.last_lat ? `<button onclick="openTeamModal('${t.id}')" class="text-emerald-500 text-[10px] font-black animate-pulse flex flex-col items-end tracking-widest uppercase">● CANLI İZLE <span class="text-[8px] text-slate-600 font-bold uppercase tracking-widest">KONUM AKTİF</span></button>` : `<span class="text-slate-800 text-[9px] font-bold uppercase tracking-widest text-right">Bağlantı Yok</span>`}
+                    </td>
                 </tr>`}).join('');
 
             document.getElementById('refsBody').innerHTML = refsData.map(r => {
                 const pid = 'SDU_REF_' + r.id.substring(0,8);
-                return `<tr class="hover:bg-white/5">
-                    <td class="px-6 py-4 font-bold text-white uppercase">${r.name}</td>
-                    <td class="px-6 py-4 font-mono text-emerald-500 font-bold uppercase">${r.code}</td>
-                    <td class="px-6 py-4 text-center"><div class="flex gap-2 justify-center"><button onclick="togglePriSpk('${pid}')" class="p-2 glass rounded-lg ${privateSpkId===pid?'spk-active':'text-slate-500'}"><i data-lucide="volume-2" class="w-4 h-4"></i></button><button onclick="togglePriMic('${pid}')" class="p-2 glass rounded-lg ${privateMicId===pid?'mic-active':'text-slate-500'}"><i data-lucide="mic" class="w-4 h-4"></i></button></div></td>
-                    <td class="px-6 py-4 text-right">${r.last_lat ? '<span class="text-emerald-500 animate-pulse">●</span>' : '●'}</td>
-                    <td class="px-6 py-4"><button onclick="delRef('${r.id}')" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                return `<tr class="hover:bg-white/5 text-center">
+                    <td class="px-8 py-6 font-bold uppercase text-white text-left">${r.name}</td>
+                    <td class="px-8 py-6 font-mono text-emerald-500 font-bold tracking-widest uppercase text-left">${r.code}</td>
+                    <td class="px-8 py-6">
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="togglePriSpk('${pid}')" class="p-3 rounded-2xl border border-white/5 ${privateSpkId===pid?'spk-active':'bg-slate-800 text-slate-400'} transition-all"><i data-lucide="${privateSpkId===pid?'volume-2':'volume-x'}" class="w-5 h-5"></i></button>
+                            <button onclick="togglePriMic('${pid}')" class="p-3 rounded-2xl border border-white/5 ${privateMicId===pid?'mic-active shadow-red-900/40':'bg-slate-800 text-slate-400'} transition-all"><i data-lucide="${privateMicId===pid?'mic':'mic-off'}" class="w-5 h-5"></i></button>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-right">${r.last_lat ? '<span class="text-emerald-500 font-black animate-pulse text-[10px]">● CANLI</span>' : '<span class="text-slate-800 text-[9px]">SİNYAL YOK</span>'}</td>
+                    <td class="px-8 py-6"><button onclick="delRef('${r.id}')" class="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>
                 </tr>`}).join('');
             lucide.createIcons();
         }
 
-        // --- SES SİSTEMİ ÇEKİRDEĞİ ---
-        function initVoice() {
-            peer = new Peer('SDU_ADMIN_2026_VOICE');
+        // --- GÜÇLENDİRİLMİŞ PEERJS BAĞLANTI MANTIĞI ---
+        let voiceResetTimeout = null;
+
+        async function initVoice() {
+            if (isInitializing) return;
+            isInitializing = true;
+
+            adminChannel.postMessage('ping');
+
+            if (peer) {
+                try {
+                    peer.disconnect();
+                    peer.destroy();
+                } catch(e) {}
+                peer = null;
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+            
+            const adminID = 'SDU_ADMIN_2026_VOICE';
+            peer = new Peer(adminID, { 
+                debug: 1,
+                config: { 
+                    'iceServers': [
+                        { 'urls': 'stun:stun.l.google.com:19302' },
+                        { 'urls': 'stun:stun1.l.google.com:19302' }
+                    ] 
+                }
+            });
+
+            peer.on('open', (id) => { 
+                isInitializing = false;
+                document.getElementById('connStatusText').innerText = "HAT AKTİF: SDÜ KOMUTA";
+                document.getElementById('connStatusText').style.color = "#10b981";
+                if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
+                startHeartbeat(); 
+            });
+            
             peer.on('call', async (call) => {
                 if (!myStream) {
-                    try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); myStream.getAudioTracks()[0].enabled = false; }
-                    catch(e) { console.error("Mic Error"); }
+                    try { 
+                        myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+                        updateMicRouting();
+                    } catch(e) { showToast("Mikrofon İzni Gerekli!", true); }
                 }
                 call.answer(myStream);
                 activeCalls[call.peer] = call;
                 call.on('stream', (rs) => {
                     let a = document.getElementById('audio-'+call.peer);
-                    if(!a) { a = document.createElement('audio'); a.id='audio-'+call.peer; a.autoplay=true; document.getElementById('audioPlayers').appendChild(a); }
-                    a.srcObject = rs; updateAudioRouting();
+                    if(!a) { 
+                        a = document.createElement('audio'); 
+                        a.id='audio-'+call.peer; 
+                        a.autoplay=true; 
+                        document.getElementById('audioPlayers').appendChild(a); 
+                    }
+                    a.srcObject = rs; 
+                    updateAudioRouting();
                 });
-                call.on('close', () => delete activeCalls[call.peer]);
+                call.on('close', () => { 
+                    delete activeCalls[call.peer]; 
+                    const el = document.getElementById('audio-'+call.peer);
+                    if(el) el.remove(); 
+                });
             });
+
+            peer.on('error', (err) => { 
+                isInitializing = false;
+                console.error('PeerJS Hatası:', err.type, err); 
+                
+                if(err.type === 'unavailable-id' || err.type === 'id-taken') {
+                    document.getElementById('connStatusText').innerText = "ID MEŞGUL! 15 Saniye İçinde Tekrar Denenecek...";
+                    document.getElementById('connStatusText').style.color = "#ef4444";
+                    if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
+                    voiceResetTimeout = setTimeout(() => { initVoice(); }, 15000);
+                } else if(err.type === 'network' || err.type === 'server-error') {
+                    if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
+                    voiceResetTimeout = setTimeout(() => { initVoice(); }, 5000);
+                }
+            });
+
+            peer.on('disconnected', () => { 
+                if (!peer.destroyed) peer.reconnect(); 
+            });
+        }
+
+        function manualVoiceReset() {
+            if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz? (Ghost ID'lerin düşmesi zaman alabilir)")) {
+                document.getElementById('voiceResetIcon').classList.add('animate-spin');
+                initVoice().finally(() => {
+                    setTimeout(() => document.getElementById('voiceResetIcon').classList.remove('animate-spin'), 2000);
+                });
+            }
+        }
+
+        function startHeartbeat() {
+            if (peer.heartbeatTimer) clearInterval(peer.heartbeatTimer);
+            peer.heartbeatTimer = setInterval(() => { 
+                if (peer && peer.socket && peer.socket._open) {
+                    peer.socket.send({type: 'HEARTBEAT'}); 
+                }
+            }, 15000);
         }
 
         function updateAudioRouting() {
@@ -174,17 +340,24 @@
 
         async function updateMicRouting() {
             if(!myStream) { try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) { return; } }
-            myStream.getAudioTracks()[0].enabled = (tmMic || rfMic || privateMicId !== null);
+            
+            const isAnyMicOn = (tmMic || rfMic || privateMicId !== null);
+            myStream.getAudioTracks()[0].enabled = isAnyMicOn;
+
             Object.keys(activeCalls).forEach(pid => {
-                const s = activeCalls[pid].peerConnection.getSenders().find(s => s.track?.kind === 'audio');
-                if(s) {
-                    let allowed = false;
-                    if(privateMicId === pid) allowed = true;
-                    else if(!privateMicId) {
-                        if(tmMic && pid.includes('SDU_TEAM_')) allowed = true;
-                        if(rfMic && pid.includes('SDU_REF_')) allowed = true;
+                const call = activeCalls[pid];
+                if (call.peerConnection) {
+                    const sender = call.peerConnection.getSenders().find(s => s.track?.kind === 'audio');
+                    if(sender) {
+                        let allowed = false;
+                        if(privateMicId === pid) allowed = true;
+                        else if(!privateMicId) {
+                            if(tmMic && pid.includes('SDU_TEAM_')) allowed = true;
+                            if(rfMic && pid.includes('SDU_REF_')) allowed = true;
+                        }
+                        // Track'i aktif et/pasifleştir
+                        sender.track.enabled = allowed;
                     }
-                    s.track.enabled = allowed;
                 }
             });
             render();
@@ -198,17 +371,17 @@
         function togglePriSpk(id) { privateSpkId = (privateSpkId === id) ? null : id; if(privateSpkId) { tmSpk=false; rfSpk=false; } updateAudioRouting(); render(); }
         
         function upUI() {
-            document.getElementById('tmSpk').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${tmSpk?'spk-active':'glass text-slate-500'}`;
-            document.getElementById('tmMic').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${tmMic?'mic-active':'glass text-slate-500'}`;
-            document.getElementById('rfSpk').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${rfSpk?'spk-active':'glass text-slate-500'}`;
-            document.getElementById('rfMic').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${rfMic?'mic-active':'glass text-slate-500'}`;
+            document.getElementById('tmSpk').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${tmSpk?'spk-active shadow-lg shadow-blue-900/30':'glass text-slate-500'}`;
+            document.getElementById('tmMic').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${tmMic?'mic-active shadow-lg shadow-red-900/30':'glass text-slate-500'}`;
+            document.getElementById('rfSpk').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${rfSpk?'spk-active shadow-lg shadow-blue-900/30':'glass text-slate-500'}`;
+            document.getElementById('rfMic').className = `flex-1 py-4 rounded-2xl text-[10px] font-black uppercase ${rfMic?'mic-active shadow-lg shadow-red-900/30':'glass text-slate-500'}`;
             lucide.createIcons();
         }
 
-        // YÖNETİM FONKSİYONLARI
-        async function addRef() { const n=document.getElementById('rn').value, c=document.getElementById('rc').value.toUpperCase(); if(n&&c) { await supabaseClient.from('referees').insert({name:n, code:c}); fetchData(); } }
-        async function delRef(id) { if(confirm('Silinsin mi?')) { await supabaseClient.from('referees').delete().eq('id',id); fetchData(); } }
-        async function updateCode(id, c) { await supabaseClient.from('registrations').update({team_code:c.toUpperCase()}).eq('id',id); fetchData(); }
+        // YÖNETİM
+        async function addReferee() { const n=document.getElementById('newRefName').value, c=document.getElementById('newRefCode').value.toUpperCase(); if(n&&c) { await supabaseClient.from('referees').insert({name:n, code:c}); document.getElementById('newRefName').value=''; document.getElementById('newRefCode').value=''; fetchData(); showToast("Hakem Eklendi."); } }
+        async function delRef(id) { if(confirm('Hakem silinsin mi?')) { await supabaseClient.from('referees').delete().eq('id',id); fetchData(); } }
+        async function updateTeamCode(id, c) { await supabaseClient.from('registrations').update({team_code:c.toUpperCase()}).eq('id',id); fetchData(); showToast("Kod Güncellendi."); }
         async function timerCtrl(id, act) { 
             const t = teamsData.find(x=>x.id===id); let up = {};
             if(act==='start') up = { is_timer_running: true, timer_started_at: new Date().toISOString() };
@@ -216,29 +389,29 @@
             else if(act==='reset') { if(!confirm('Sıfırla?')) return; up = { is_timer_running: false, elapsed_seconds: 0, timer_started_at: null }; }
             await supabaseClient.from('registrations').update(up).eq('id',id); fetchData();
         }
-        async function penalty(id, m) { 
+        async function applyPenalty(id, m) { 
             const t = teamsData.find(x=>x.id===id); 
             const cur = Number(t.elapsed_seconds||0) + (t.is_timer_running ? Math.floor((Date.now()-new Date(t.timer_started_at).getTime())/1000) : 0);
             await supabaseClient.from('registrations').update({elapsed_seconds: Math.max(0, cur + (m*60)), timer_started_at: t.is_timer_running ? new Date().toISOString() : null}).eq('id',id);
             fetchData();
         }
 
-        function openTeam(id) {
+        function openTeamModal(id) {
             const t = teamsData.find(x => x.id === id);
             const tReports = reportsData.filter(r => r.team_id === id);
             let path = ""; if(t.path_history?.length) { path = "&path=color:0x3b82f6|weight:5"; t.path_history.slice(-25).forEach(p => path += `|${p.lat},${p.lng}`); }
-            const map = t.last_lat ? `<iframe class="w-full h-80 rounded-[2rem] mb-6 shadow-2xl border-2 border-white/5" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed${path}"></iframe>` : '';
+            const map = t.last_lat ? `<iframe class="w-full h-80 rounded-[2rem] mb-6 shadow-2xl border-2 border-white/5" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed${path}"></iframe>` : '<div class="p-10 text-center glass rounded-2xl mb-6 text-slate-500 uppercase font-black tracking-widest text-xs">KONUM VERİSİ YOK</div>';
             
-            document.getElementById('modalBody').innerHTML = `<h2 class="text-3xl font-black mb-6 uppercase tracking-tighter">${t.team_name}</h2>${map}
+            document.getElementById('modalBody').innerHTML = `<h2 class="text-3xl font-black mb-6 uppercase tracking-tighter text-left">${t.team_name}</h2>${map}
                 <div class="grid md:grid-cols-2 gap-6 text-left">
                     <div><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Hakem Raporları</h4>
                         ${tReports.map(r => `<div class="p-4 bg-white/5 rounded-2xl mb-2 flex justify-between items-center border border-white/5">
-                            <div><span class="text-emerald-500 font-black text-[10px] uppercase">${r.referees?.name}</span><p class="text-xs mt-1">${r.notes||'Not yok.'}</p></div>
+                            <div><span class="text-emerald-500 font-black text-[10px] uppercase tracking-widest">${r.referees?.name || 'Sistem'}</span><p class="text-xs mt-1 font-medium text-white">${r.notes||'Not yok.'}</p></div>
                             ${r.success ? '<i data-lucide="check-circle" class="text-emerald-500"></i>' : '<i data-lucide="x-circle" class="text-red-500"></i>'}
-                        </div>`).join('') || '<p class="text-xs text-slate-600">Henüz rapor yok.</p>'}
+                        </div>`).join('') || '<p class="text-xs text-slate-600 italic text-left">Henüz rapor yok.</p>'}
                     </div>
                     <div><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Takım Üyeleri</h4>
-                        ${t.members.map(m => `<div class="p-3 glass rounded-xl mb-2 flex justify-between"><span>${m.name}</span><a href="tel:${m.phone}" class="text-emerald-500"><i data-lucide="phone" class="w-4 h-4"></i></a></div>`).join('')}
+                        ${t.members.map(m => `<div class="p-3 glass rounded-xl mb-2 flex justify-between items-center text-white"><span>${m.name}</span><a href="tel:${m.phone}" class="text-emerald-500"><i data-lucide="phone" class="w-4 h-4"></i></a></div>`).join('')}
                     </div>
                 </div>`;
             document.getElementById('teamModal').classList.remove('opacity-0', 'pointer-events-none');
@@ -247,9 +420,21 @@
 
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
         function formatTime(t) { let s = Number(t.elapsed_seconds || 0); if(t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime())/1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
+        function showToast(m, e) { const d = document.createElement('div'); d.className=`p-4 rounded-xl text-[10px] font-black uppercase tracking-widest glass border ${e?'border-red-500 text-red-500':'border-emerald-500 text-emerald-500'}`; d.innerText=m; document.getElementById('toastArea').appendChild(d); setTimeout(()=>d.remove(),3000); }
 
-        window.onload = () => { fetchData(); initVoice(); supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); };
+        window.onload = () => { 
+            fetchData(); 
+            initVoice(); 
+            supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); 
+        };
         setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
+        
+        window.addEventListener('beforeunload', () => { 
+            if(peer) {
+                peer.disconnect();
+                peer.destroy();
+            }
+        });
     </script>
 </body>
 </html>
