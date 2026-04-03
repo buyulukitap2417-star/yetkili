@@ -30,6 +30,7 @@
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2 text-left"></div>
     <div id="audioPlayers" class="hidden"></div>
 
+    <!-- YETKİLİ GİRİŞ MODALI -->
     <div id="adminLoginUI" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950 px-6 text-white text-center">
         <div class="max-w-md w-full glass p-10 rounded-[3rem] border-t-4 border-red-700 shadow-2xl">
             <div class="w-20 h-20 bg-red-700/20 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="lock" class="text-red-500 w-10 h-10"></i></div>
@@ -63,6 +64,7 @@
         </div>
     </div>
 
+    <!-- TAKIM DETAY MODAL -->
     <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-3xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-red-700 text-white shadow-3xl text-left">
             <button onclick="closeModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
@@ -70,6 +72,7 @@
         </div>
     </div>
 
+    <!-- KAYIT EVRAKLARI MODAL -->
     <div id="infoModal" class="fixed inset-0 z-[700] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-4xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-blue-500 text-white shadow-3xl text-left">
             <button onclick="closeInfoModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
@@ -78,6 +81,7 @@
     </div>
 
     <div id="adminDashUI" class="hidden max-w-7xl mx-auto space-y-6">
+        <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-center glass p-6 rounded-3xl gap-4 shadow-2xl border border-white/5">
             <div class="flex items-center gap-4 text-left">
                 <div class="p-4 bg-red-700 rounded-2xl shadow-xl shadow-red-900/20"><i data-lucide="shield-check" class="text-white"></i></div>
@@ -98,6 +102,7 @@
             </div>
         </header>
 
+        <!-- 4 KANAL TELSİZ MERKEZİ -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="glass p-6 rounded-[2rem] border-l-4 border-red-600 relative overflow-hidden text-left">
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Yarışmacı Genel Hattı</p>
@@ -115,6 +120,7 @@
             </div>
         </div>
 
+        <!-- YARIŞMACILAR PANELİ -->
         <div id="panelTeams" class="glass rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
             <table class="w-full text-left text-white border-collapse">
                 <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">
@@ -195,6 +201,7 @@
                 initVoice(); 
                 supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe();
                 supabaseClient.channel('adm_sync_refs').on('postgres_changes', {event:'*', schema:'public', table:'referees'}, fetchData).subscribe();
+                supabaseClient.channel('adm_sync_reps').on('postgres_changes', {event:'*', schema:'public', table:'referee_reports'}, fetchData).subscribe();
             } else {
                 showToast("Hatalı Şifre!", true);
             }
@@ -209,6 +216,7 @@
                 initVoice(); 
                 supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); 
                 supabaseClient.channel('adm_sync_refs').on('postgres_changes', {event:'*', schema:'public', table:'referees'}, fetchData).subscribe();
+                supabaseClient.channel('adm_sync_reps').on('postgres_changes', {event:'*', schema:'public', table:'referee_reports'}, fetchData).subscribe();
             }
         };
 
@@ -277,7 +285,7 @@
                 const isTalking = activeMics[pid];
                 const rowClass = isTalking ? 'bg-emerald-500/20 border-l-4 border-emerald-500 transition-colors text-center' : 'hover:bg-white/5 text-center';
                 const micBadge = isTalking ? `<span class="ml-3 inline-flex items-center gap-1 text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"><i data-lucide="mic" class="w-3 h-3"></i> KONUŞUYOR</span>` : '';
-                const cleanRiddle = (r.riddle_answer || '-').replace(/'/g, "\\'"); // escape quotes for inline function
+                const cleanRiddle = (r.riddle_answer || '-').replace(/'/g, "\\'"); 
 
                 return `<tr class="${rowClass}">
                     <td class="px-8 py-6 text-left font-bold uppercase text-white flex items-center">
@@ -517,13 +525,27 @@
             let path = ""; if(t.path_history?.length) { path = "&path=color:0x3b82f6|weight:5"; t.path_history.slice(-25).forEach(p => path += `|${p.lat},${p.lng}`); }
             const map = t.last_lat ? `<iframe class="w-full h-80 rounded-[2rem] mb-6 shadow-2xl border-2 border-white/5" src="https://maps.google.com/maps?q=${t.last_lat},${t.last_lng}&z=17&output=embed${path}"></iframe>` : '<div class="p-10 text-center glass rounded-2xl mb-6 text-slate-500 uppercase font-black tracking-widest text-xs">KONUM VERİSİ YOK</div>';
             
+            // Hakem raporları tasarımı güncellendi ("Size Ulaştı Mı?" vs.)
             document.getElementById('modalBody').innerHTML = `<h2 class="text-3xl font-black mb-6 uppercase tracking-tighter text-left">${t.team_name}</h2>${map}
                 <div class="grid md:grid-cols-2 gap-6 text-left">
                     <div><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Hakem Raporları</h4>
-                        ${tReports.map(r => `<div class="p-4 bg-white/5 rounded-2xl mb-2 flex justify-between items-center border border-white/5">
-                            <div><span class="text-emerald-500 font-black text-[10px] uppercase tracking-widest">${r.referees?.name || 'Sistem'}</span><p class="text-xs mt-1 font-medium text-white">${r.notes||'Not yok.'}</p></div>
-                            ${r.success ? '<i data-lucide="check-circle" class="text-emerald-500"></i>' : '<i data-lucide="x-circle" class="text-red-500"></i>'}
-                        </div>`).join('') || '<p class="text-xs text-slate-600 italic text-left">Henüz rapor yok.</p>'}
+                        ${tReports.map(r => {
+                            const hasPenalty = r.notes && r.notes.includes('[CEZA UYGULANDI]');
+                            const penaltyBadge = hasPenalty ? '<span class="text-[9px] bg-red-500/20 text-red-500 px-2 py-0.5 rounded uppercase font-bold ml-2">Ceza Var</span>' : '';
+                            return `<div class="p-4 bg-white/5 rounded-2xl mb-2 flex flex-col border ${hasPenalty ? 'border-red-500/30' : 'border-white/5'}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div>
+                                        <span class="text-emerald-500 font-black text-[10px] uppercase tracking-widest">${r.referees?.name || 'Sistem'}</span>
+                                        ${penaltyBadge}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <span class="text-[9px] px-2 py-0.5 rounded ${r.arrived ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}">Ulaştı: ${r.arrived ? 'Evet' : 'Hayır'}</span>
+                                        <span class="text-[9px] px-2 py-0.5 rounded ${r.success ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-500/20 text-slate-400'}">Bildi: ${r.success ? 'Evet' : 'Hayır'}</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-white bg-black/20 p-2 rounded-lg italic break-words whitespace-pre-wrap">${r.notes||'Not yok.'}</p>
+                            </div>`
+                        }).join('') || '<p class="text-xs text-slate-600 italic text-left">Henüz rapor yok.</p>'}
                     </div>
                     <div><h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Takım Üyeleri</h4>
                         ${t.members.map(m => `<div class="p-3 glass rounded-xl mb-2 flex justify-between items-center text-white"><span>${m.name}</span><a href="tel:${m.phone}" class="text-emerald-500"><i data-lucide="phone" class="w-4 h-4"></i></a></div>`).join('')}
@@ -568,7 +590,10 @@
         setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
         
         window.addEventListener('beforeunload', () => { 
-            if(peer) { peer.disconnect(); peer.destroy(); }
+            if(peer) {
+                peer.disconnect();
+                peer.destroy();
+            }
         });
     </script>
 </body>
