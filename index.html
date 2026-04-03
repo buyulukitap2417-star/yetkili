@@ -30,7 +30,6 @@
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2 text-left"></div>
     <div id="audioPlayers" class="hidden"></div>
 
-    <!-- YETKİLİ GİRİŞ MODALI -->
     <div id="adminLoginUI" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950 px-6 text-white text-center">
         <div class="max-w-md w-full glass p-10 rounded-[3rem] border-t-4 border-red-700 shadow-2xl">
             <div class="w-20 h-20 bg-red-700/20 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="lock" class="text-red-500 w-10 h-10"></i></div>
@@ -40,7 +39,30 @@
         </div>
     </div>
 
-    <!-- TAKIM/HAKEM DETAY MODAL -->
+    <!-- HAKEM DÜZENLEME MODAL -->
+    <div id="editRefModal" class="fixed inset-0 z-[800] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-md rounded-[2.5rem] p-8 relative border-t-4 border-blue-500 text-white shadow-3xl text-left">
+            <button onclick="closeEditRefModal()" class="absolute top-6 right-6 p-2 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
+            <h2 class="text-2xl font-black mb-6 uppercase tracking-tighter text-blue-400">Hakem Düzenle</h2>
+            <div class="space-y-4">
+                <input type="hidden" id="editRefId">
+                <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Hakem Adı</label>
+                    <input type="text" id="editRefName" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-blue-500 text-white">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Giriş Kodu</label>
+                    <input type="text" id="editRefCode" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-blue-500 text-white uppercase font-mono">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Bilmece Cevabı</label>
+                    <input type="text" id="editRefRiddle" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-blue-500 text-white" placeholder="Hakemin göreceği cevap...">
+                </div>
+                <button onclick="saveEditedRef()" class="w-full mt-4 px-8 py-4 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-blue-500 active:scale-95 transition-all">Güncelle</button>
+            </div>
+        </div>
+    </div>
+
     <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-3xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-red-700 text-white shadow-3xl text-left">
             <button onclick="closeModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
@@ -48,7 +70,6 @@
         </div>
     </div>
 
-    <!-- KAYIT EVRAKLARI MODAL -->
     <div id="infoModal" class="fixed inset-0 z-[700] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-4xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-blue-500 text-white shadow-3xl text-left">
             <button onclick="closeInfoModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
@@ -57,7 +78,6 @@
     </div>
 
     <div id="adminDashUI" class="hidden max-w-7xl mx-auto space-y-6">
-        <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-center glass p-6 rounded-3xl gap-4 shadow-2xl border border-white/5">
             <div class="flex items-center gap-4 text-left">
                 <div class="p-4 bg-red-700 rounded-2xl shadow-xl shadow-red-900/20"><i data-lucide="shield-check" class="text-white"></i></div>
@@ -78,7 +98,6 @@
             </div>
         </header>
 
-        <!-- 4 KANAL TELSİZ MERKEZİ -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="glass p-6 rounded-[2rem] border-l-4 border-red-600 relative overflow-hidden text-left">
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Yarışmacı Genel Hattı</p>
@@ -96,7 +115,6 @@
             </div>
         </div>
 
-        <!-- YARIŞMACILAR PANELİ -->
         <div id="panelTeams" class="glass rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
             <table class="w-full text-left text-white border-collapse">
                 <thead class="bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">
@@ -114,16 +132,20 @@
 
         <!-- HAKEMLER PANELİ -->
         <div id="panelRefs" class="hidden space-y-4">
-            <div class="glass p-8 rounded-[2rem] flex flex-wrap items-center justify-between gap-6 border border-white/5 text-left">
-                <div class="flex gap-4 flex-1 min-w-[300px]">
+            <div class="glass p-8 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 border border-white/5 text-left">
+                <div class="flex gap-4 flex-1 min-w-[250px]">
                     <div class="flex-1 space-y-2 text-left">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Hakem Adı</label>
-                        <input type="text" id="newRefName" placeholder="Örn: Nokta 1 Hakemi" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white">
+                        <input type="text" id="newRefName" placeholder="Nokta 1 Hakemi" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white">
                     </div>
-                    <div class="w-40 space-y-2 text-left">
+                    <div class="w-32 space-y-2 text-left">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Giriş Kodu</label>
                         <input type="text" id="newRefCode" placeholder="HAKEM01" class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white uppercase font-mono">
                     </div>
+                </div>
+                <div class="flex-1 min-w-[200px] space-y-2 text-left">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Bilmece Cevabı</label>
+                    <input type="text" id="newRefRiddle" placeholder="Cevap..." class="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm outline-none focus:border-emerald-500 text-white">
                 </div>
                 <button onclick="addReferee()" class="mt-6 px-10 py-3.5 bg-emerald-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl hover:bg-emerald-500 active:scale-95 transition-all">Hakem Kaydet</button>
             </div>
@@ -134,6 +156,7 @@
                         <tr>
                             <th class="px-8 py-6 text-left">Görevli Hakem</th>
                             <th class="px-8 py-6">Giriş Kodu</th>
+                            <th class="px-8 py-6 text-left">Bilmece Cevabı</th>
                             <th class="px-8 py-6">Özel Telsiz</th>
                             <th class="px-8 py-6 text-right">Konum</th>
                             <th class="px-8 py-6">İşlem</th>
@@ -154,8 +177,6 @@
         let activeCalls = {}, privateMicId = null, privateSpkId = null;
         let tmSpk = false, tmMic = false, rfSpk = false, rfMic = false;
         let isInitializing = false;
-        
-        // CANLI SES GÖSTERGESİ İÇİN
         let activeMics = {}; 
 
         const adminChannel = new BroadcastChannel('sdu_ory_admin_check');
@@ -166,13 +187,14 @@
 
         function adminLogin() {
             const pwd = document.getElementById('adminPwd').value;
-            if(pwd === '352477ALI') {
+            if(pwd === 'KOMUTA2026') {
                 sessionStorage.setItem('admin_auth', 'true');
                 document.getElementById('adminLoginUI').classList.add('hidden');
                 document.getElementById('adminDashUI').classList.remove('hidden');
                 fetchData(); 
                 initVoice(); 
                 supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe();
+                supabaseClient.channel('adm_sync_refs').on('postgres_changes', {event:'*', schema:'public', table:'referees'}, fetchData).subscribe();
             } else {
                 showToast("Hatalı Şifre!", true);
             }
@@ -186,6 +208,7 @@
                 fetchData(); 
                 initVoice(); 
                 supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); 
+                supabaseClient.channel('adm_sync_refs').on('postgres_changes', {event:'*', schema:'public', table:'referees'}, fetchData).subscribe();
             }
         };
 
@@ -254,12 +277,14 @@
                 const isTalking = activeMics[pid];
                 const rowClass = isTalking ? 'bg-emerald-500/20 border-l-4 border-emerald-500 transition-colors text-center' : 'hover:bg-white/5 text-center';
                 const micBadge = isTalking ? `<span class="ml-3 inline-flex items-center gap-1 text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"><i data-lucide="mic" class="w-3 h-3"></i> KONUŞUYOR</span>` : '';
+                const cleanRiddle = (r.riddle_answer || '-').replace(/'/g, "\\'"); // escape quotes for inline function
 
                 return `<tr class="${rowClass}">
                     <td class="px-8 py-6 text-left font-bold uppercase text-white flex items-center">
                         ${r.name} ${micBadge}
                     </td>
                     <td class="px-8 py-6 font-mono text-emerald-500 font-bold tracking-widest uppercase text-left">${r.code}</td>
+                    <td class="px-8 py-6 text-left text-xs text-slate-300 italic">${r.riddle_answer || '-'}</td>
                     <td class="px-8 py-6">
                         <div class="flex gap-3 justify-center">
                             <button onclick="togglePriSpk('${pid}')" class="p-3 rounded-2xl border border-white/5 ${privateSpkId===pid?'spk-active':'bg-slate-800 text-slate-400'} transition-all"><i data-lucide="${privateSpkId===pid?'volume-2':'volume-x'}" class="w-5 h-5"></i></button>
@@ -267,13 +292,19 @@
                         </div>
                     </td>
                     <td class="px-8 py-6 text-right">${r.last_lat ? '<span class="text-emerald-500 font-black animate-pulse text-[10px]">● CANLI</span>' : '<span class="text-slate-800 text-[9px]">SİNYAL YOK</span>'}</td>
-                    <td class="px-8 py-6 text-center"><button onclick="delRef('${r.id}')" class="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>
+                    <td class="px-8 py-6 text-center">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick="openEditRefModal('${r.id}', '${r.name}', '${r.code}', '${cleanRiddle}')" class="p-3 text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all" title="Düzenle"><i data-lucide="edit-2" class="w-5 h-5"></i></button>
+                            <button onclick="delRef('${r.id}')" class="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all" title="Sil"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </div>
+                    </td>
                 </tr>`}).join('');
             lucide.createIcons();
         }
 
         let voiceResetTimeout = null;
 
+        // SES SİSTEMİ (KORUNAN ALAN)
         async function initVoice() {
             if (isInitializing) return;
             isInitializing = true;
@@ -281,34 +312,24 @@
             adminChannel.postMessage('ping');
 
             if (peer) {
-                try {
-                    peer.disconnect();
-                    peer.destroy();
-                } catch(e) {}
+                try { peer.disconnect(); peer.destroy(); } catch(e) {}
                 peer = null;
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
             peer = new Peer('SDU_ADMIN_2026_VOICE', { 
                 debug: 1,
-                config: { 
-                    'iceServers': [
-                        { 'urls': 'stun:stun.l.google.com:19302' },
-                        { 'urls': 'stun:stun1.l.google.com:19302' }
-                    ] 
-                }
+                config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }] }
             });
 
             peer.on('open', (id) => { 
                 isInitializing = false;
-                console.log('Komuta Merkezi ID Alındı:', id); 
                 document.getElementById('connStatusText').innerText = "HAT AKTİF: SDÜ KOMUTA";
                 document.getElementById('connStatusText').style.color = "#10b981";
                 if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
                 startHeartbeat(); 
             });
 
-            // DATA KANALI DİNLEYİCİSİ (CANLI MİKROFON DURUMU İÇİN)
             peer.on('connection', (conn) => {
                 conn.on('data', (data) => {
                     if (data.type === 'MIC_STATUS') {
@@ -316,17 +337,13 @@
                         render();
                     }
                 });
-                conn.on('close', () => {
-                    activeMics[conn.peer] = false;
-                    render();
-                });
+                conn.on('close', () => { activeMics[conn.peer] = false; render(); });
             });
             
             peer.on('call', async (call) => {
                 if (!myStream) {
-                    try { 
-                        myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
-                    } catch(e) { showToast("Mikrofon İzni Gerekli!", true); }
+                    try { myStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } 
+                    catch(e) { showToast("Mikrofon İzni Gerekli!", true); }
                 }
 
                 const clonedStream = myStream.clone();
@@ -345,32 +362,20 @@
 
                 call.on('stream', (rs) => {
                     let a = document.getElementById('audio-'+call.peer);
-                    if(!a) { 
-                        a = document.createElement('audio'); 
-                        a.id='audio-'+call.peer; 
-                        a.autoplay=true; 
-                        document.getElementById('audioPlayers').appendChild(a); 
-                    }
-                    a.srcObject = rs; 
-                    updateAudioRouting();
+                    if(!a) { a = document.createElement('audio'); a.id='audio-'+call.peer; a.autoplay=true; document.getElementById('audioPlayers').appendChild(a); }
+                    a.srcObject = rs; updateAudioRouting();
                 });
 
                 call.on('close', () => { 
-                    delete activeCalls[call.peer]; 
-                    activeMics[call.peer] = false;
-                    render();
-                    const el = document.getElementById('audio-'+call.peer);
-                    if(el) el.remove(); 
+                    delete activeCalls[call.peer]; activeMics[call.peer] = false; render();
+                    const el = document.getElementById('audio-'+call.peer); if(el) el.remove(); 
                 });
                 
                 if (call.peerConnection) {
                     call.peerConnection.addEventListener('iceconnectionstatechange', () => {
                         const state = call.peerConnection.iceConnectionState;
                         if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-                            call.close();
-                            delete activeCalls[call.peer];
-                            activeMics[call.peer] = false;
-                            render();
+                            call.close(); delete activeCalls[call.peer]; activeMics[call.peer] = false; render();
                         }
                     });
                 }
@@ -378,8 +383,6 @@
 
             peer.on('error', (err) => { 
                 isInitializing = false;
-                console.error('PeerJS Hatası:', err.type, err); 
-                
                 if(err.type === 'unavailable-id' || err.type === 'id-taken') {
                     document.getElementById('connStatusText').innerText = "ID MEŞGUL! 15 Saniye İçinde Tekrar Denenecek...";
                     document.getElementById('connStatusText').style.color = "#ef4444";
@@ -391,27 +394,19 @@
                 }
             });
 
-            peer.on('disconnected', () => { 
-                if (!peer.destroyed) peer.reconnect(); 
-            });
+            peer.on('disconnected', () => { if (!peer.destroyed) peer.reconnect(); });
         }
 
         function manualVoiceReset() {
             if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz? (Ghost ID'lerin düşmesi zaman alabilir)")) {
                 document.getElementById('voiceResetIcon').classList.add('animate-spin');
-                initVoice().finally(() => {
-                    setTimeout(() => document.getElementById('voiceResetIcon').classList.remove('animate-spin'), 2000);
-                });
+                initVoice().finally(() => { setTimeout(() => document.getElementById('voiceResetIcon').classList.remove('animate-spin'), 2000); });
             }
         }
 
         function startHeartbeat() {
             if (peer.heartbeatTimer) clearInterval(peer.heartbeatTimer);
-            peer.heartbeatTimer = setInterval(() => { 
-                if (peer && peer.socket && peer.socket._open) {
-                    peer.socket.send({type: 'HEARTBEAT'}); 
-                }
-            }, 15000);
+            peer.heartbeatTimer = setInterval(() => { if (peer && peer.socket && peer.socket._open) { peer.socket.send({type: 'HEARTBEAT'}); } }, 15000);
         }
 
         function updateAudioRouting() {
@@ -462,8 +457,45 @@
             lucide.createIcons();
         }
 
-        async function addReferee() { const n=document.getElementById('newRefName').value, c=document.getElementById('newRefCode').value.toUpperCase(); if(n&&c) { await supabaseClient.from('referees').insert({name:n, code:c}); document.getElementById('newRefName').value=''; document.getElementById('newRefCode').value=''; fetchData(); showToast("Hakem Eklendi."); } }
+        // --- HAKEM YÖNETİMİ ---
+        async function addReferee() { 
+            const n = document.getElementById('newRefName').value;
+            const c = document.getElementById('newRefCode').value.toUpperCase(); 
+            const rAns = document.getElementById('newRefRiddle').value;
+            if(n && c) { 
+                await supabaseClient.from('referees').insert({name: n, code: c, riddle_answer: rAns}); 
+                document.getElementById('newRefName').value = ''; 
+                document.getElementById('newRefCode').value = ''; 
+                document.getElementById('newRefRiddle').value = '';
+                fetchData(); showToast("Hakem Eklendi."); 
+            } 
+        }
+
         async function delRef(id) { if(confirm('Hakem silinsin mi?')) { await supabaseClient.from('referees').delete().eq('id',id); fetchData(); } }
+        
+        function openEditRefModal(id, name, code, riddle) {
+            document.getElementById('editRefId').value = id;
+            document.getElementById('editRefName').value = name;
+            document.getElementById('editRefCode').value = code;
+            document.getElementById('editRefRiddle').value = riddle === '-' ? '' : riddle;
+            document.getElementById('editRefModal').classList.remove('opacity-0', 'pointer-events-none');
+            lucide.createIcons();
+        }
+        
+        function closeEditRefModal() { document.getElementById('editRefModal').classList.add('opacity-0', 'pointer-events-none'); }
+        
+        async function saveEditedRef() {
+            const id = document.getElementById('editRefId').value;
+            const n = document.getElementById('editRefName').value;
+            const c = document.getElementById('editRefCode').value.toUpperCase();
+            const rAns = document.getElementById('editRefRiddle').value;
+            await supabaseClient.from('referees').update({name: n, code: c, riddle_answer: rAns}).eq('id', id);
+            closeEditRefModal();
+            fetchData();
+            showToast("Hakem Güncellendi.");
+        }
+
+        // --- TAKIM YÖNETİMİ ---
         async function updateTeamCode(id, c) { await supabaseClient.from('registrations').update({team_code:c.toUpperCase()}).eq('id',id); fetchData(); showToast("Kod Güncellendi."); }
         async function timerCtrl(id, act) { 
             const t = teamsData.find(x=>x.id===id); let up = {};
@@ -536,10 +568,7 @@
         setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
         
         window.addEventListener('beforeunload', () => { 
-            if(peer) {
-                peer.disconnect();
-                peer.destroy();
-            }
+            if(peer) { peer.disconnect(); peer.destroy(); }
         });
     </script>
 </body>
