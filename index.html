@@ -30,6 +30,16 @@
     <div id="toastArea" class="fixed top-5 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-xs space-y-2 text-left"></div>
     <div id="audioPlayers" class="hidden"></div>
 
+    <!-- YETKİLİ GİRİŞ MODALI -->
+    <div id="adminLoginUI" class="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950 px-6 text-white text-center">
+        <div class="max-w-md w-full glass p-10 rounded-[3rem] border-t-4 border-red-700 shadow-2xl">
+            <div class="w-20 h-20 bg-red-700/20 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="lock" class="text-red-500 w-10 h-10"></i></div>
+            <h1 class="text-3xl font-black uppercase mb-10 tracking-tighter">YETKİLİ GİRİŞİ</h1>
+            <input type="password" id="adminPwd" placeholder="GİRİŞ ŞİFRESİ" class="w-full bg-black/40 border border-white/10 rounded-2xl py-6 px-6 text-center text-2xl font-black outline-none uppercase text-red-500 mb-6 focus:border-red-600 transition-all" onkeypress="if(event.key === 'Enter') adminLogin();">
+            <button onclick="adminLogin()" class="w-full py-6 bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">SİSTEMİ AÇ</button>
+        </div>
+    </div>
+
     <!-- TAKIM/HAKEM DETAY MODAL -->
     <div id="teamModal" class="fixed inset-0 z-[600] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-3xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-red-700 text-white shadow-3xl text-left">
@@ -38,7 +48,7 @@
         </div>
     </div>
 
-    <!-- KAYIT EVRAKLARI MODAL (YENİ EKLENEN) -->
+    <!-- KAYIT EVRAKLARI MODAL -->
     <div id="infoModal" class="fixed inset-0 z-[700] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
         <div class="glass w-full max-w-4xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-blue-500 text-white shadow-3xl text-left">
             <button onclick="closeInfoModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
@@ -46,7 +56,7 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div id="adminDashUI" class="hidden max-w-7xl mx-auto space-y-6">
         <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-center glass p-6 rounded-3xl gap-4 shadow-2xl border border-white/5">
             <div class="flex items-center gap-4 text-left">
@@ -144,11 +154,39 @@
         let activeCalls = {}, privateMicId = null, privateSpkId = null;
         let tmSpk = false, tmMic = false, rfSpk = false, rfMic = false;
         let isInitializing = false;
+        
+        // CANLI SES GÖSTERGESİ İÇİN
+        let activeMics = {}; 
 
         const adminChannel = new BroadcastChannel('sdu_ory_admin_check');
         adminChannel.onmessage = (event) => {
             if (event.data === 'ping' && peer && peer.open) { adminChannel.postMessage('pong'); } 
             else if (event.data === 'pong') { document.getElementById('connStatusText').innerText = "HATA: DİĞER ADMİN SEKMESİNİ KAPATIN!"; document.getElementById('connStatusText').style.color = "#ef4444"; showToast("ID Çakışması! Başka bir admin sekmesi açık.", true); }
+        };
+
+        function adminLogin() {
+            const pwd = document.getElementById('adminPwd').value;
+            if(pwd === 'KOMUTA2026') {
+                sessionStorage.setItem('admin_auth', 'true');
+                document.getElementById('adminLoginUI').classList.add('hidden');
+                document.getElementById('adminDashUI').classList.remove('hidden');
+                fetchData(); 
+                initVoice(); 
+                supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe();
+            } else {
+                showToast("Hatalı Şifre!", true);
+            }
+        }
+
+        window.onload = () => { 
+            lucide.createIcons();
+            if (sessionStorage.getItem('admin_auth') === 'true') {
+                document.getElementById('adminLoginUI').classList.add('hidden');
+                document.getElementById('adminDashUI').classList.remove('hidden');
+                fetchData(); 
+                initVoice(); 
+                supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); 
+            }
         };
 
         async function fetchData() {
@@ -170,11 +208,16 @@
         function render() {
             document.getElementById('teamsBody').innerHTML = teamsData.map(t => {
                 const pid = 'SDU_TEAM_' + t.id.substring(0,8);
-                return `<tr class="hover:bg-white/5 transition-colors">
+                const isTalking = activeMics[pid];
+                const rowClass = isTalking ? 'bg-emerald-500/20 border-l-4 border-emerald-500 transition-colors' : 'hover:bg-white/5 transition-colors';
+                const micBadge = isTalking ? `<span class="ml-3 inline-flex items-center gap-1 text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"><i data-lucide="mic" class="w-3 h-3"></i> KONUŞUYOR</span>` : '';
+
+                return `<tr class="${rowClass}">
                     <td class="px-8 py-6 text-left">
                         <div class="flex items-center gap-3">
                             <button onclick="openTeamModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 transition-colors">${t.team_name}</button>
                             <button onclick="openInfoModal('${t.id}')" class="p-2 glass rounded-lg text-blue-400 hover:bg-blue-500/20 transition-all shadow-lg" title="Kayıt Evrakları"><i data-lucide="folder-open" class="w-4 h-4"></i></button>
+                            ${micBadge}
                         </div>
                         <div class="mt-2 flex items-center gap-2">
                             <span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span>
@@ -208,8 +251,14 @@
 
             document.getElementById('refsBody').innerHTML = refsData.map(r => {
                 const pid = 'SDU_REF_' + r.id.substring(0,8);
-                return `<tr class="hover:bg-white/5 text-center">
-                    <td class="px-8 py-6 font-bold uppercase text-white text-left">${r.name}</td>
+                const isTalking = activeMics[pid];
+                const rowClass = isTalking ? 'bg-emerald-500/20 border-l-4 border-emerald-500 transition-colors text-center' : 'hover:bg-white/5 text-center';
+                const micBadge = isTalking ? `<span class="ml-3 inline-flex items-center gap-1 text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"><i data-lucide="mic" class="w-3 h-3"></i> KONUŞUYOR</span>` : '';
+
+                return `<tr class="${rowClass}">
+                    <td class="px-8 py-6 text-left font-bold uppercase text-white flex items-center">
+                        ${r.name} ${micBadge}
+                    </td>
                     <td class="px-8 py-6 font-mono text-emerald-500 font-bold tracking-widest uppercase text-left">${r.code}</td>
                     <td class="px-8 py-6">
                         <div class="flex gap-3 justify-center">
@@ -223,7 +272,6 @@
             lucide.createIcons();
         }
 
-        // --- SES SİSTEMİ (DOKUNULMADI) ---
         let voiceResetTimeout = null;
 
         async function initVoice() {
@@ -258,6 +306,20 @@
                 document.getElementById('connStatusText').style.color = "#10b981";
                 if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
                 startHeartbeat(); 
+            });
+
+            // DATA KANALI DİNLEYİCİSİ (CANLI MİKROFON DURUMU İÇİN)
+            peer.on('connection', (conn) => {
+                conn.on('data', (data) => {
+                    if (data.type === 'MIC_STATUS') {
+                        activeMics[conn.peer] = data.state;
+                        render();
+                    }
+                });
+                conn.on('close', () => {
+                    activeMics[conn.peer] = false;
+                    render();
+                });
             });
             
             peer.on('call', async (call) => {
@@ -295,6 +357,8 @@
 
                 call.on('close', () => { 
                     delete activeCalls[call.peer]; 
+                    activeMics[call.peer] = false;
+                    render();
                     const el = document.getElementById('audio-'+call.peer);
                     if(el) el.remove(); 
                 });
@@ -305,6 +369,8 @@
                         if (state === 'disconnected' || state === 'failed' || state === 'closed') {
                             call.close();
                             delete activeCalls[call.peer];
+                            activeMics[call.peer] = false;
+                            render();
                         }
                     });
                 }
@@ -396,7 +462,6 @@
             lucide.createIcons();
         }
 
-        // YÖNETİM
         async function addReferee() { const n=document.getElementById('newRefName').value, c=document.getElementById('newRefCode').value.toUpperCase(); if(n&&c) { await supabaseClient.from('referees').insert({name:n, code:c}); document.getElementById('newRefName').value=''; document.getElementById('newRefCode').value=''; fetchData(); showToast("Hakem Eklendi."); } }
         async function delRef(id) { if(confirm('Hakem silinsin mi?')) { await supabaseClient.from('referees').delete().eq('id',id); fetchData(); } }
         async function updateTeamCode(id, c) { await supabaseClient.from('registrations').update({team_code:c.toUpperCase()}).eq('id',id); fetchData(); showToast("Kod Güncellendi."); }
@@ -414,7 +479,6 @@
             fetchData();
         }
 
-        // Modallar
         function openTeamModal(id) {
             const t = teamsData.find(x => x.id === id);
             const tReports = reportsData.filter(r => r.team_id === id);
@@ -439,7 +503,6 @@
 
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
         
-        // YENİ EKLENEN: KAYIT BİLGİLERİ EVRAKI MODALI
         function openInfoModal(id) {
             const t = teamsData.find(x => x.id === id);
             let membersHtml = t.members.map((m, i) => `
@@ -470,11 +533,6 @@
         function formatTime(t) { let s = Number(t.elapsed_seconds || 0); if(t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime())/1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
         function showToast(m, e) { const d = document.createElement('div'); d.className=`p-4 rounded-xl text-[10px] font-black uppercase tracking-widest glass border ${e?'border-red-500 text-red-500':'border-emerald-500 text-emerald-500'}`; d.innerText=m; document.getElementById('toastArea').appendChild(d); setTimeout(()=>d.remove(),3000); }
 
-        window.onload = () => { 
-            fetchData(); 
-            initVoice(); 
-            supabaseClient.channel('adm_sync').on('postgres_changes', {event:'*', schema:'public', table:'registrations'}, fetchData).subscribe(); 
-        };
         setInterval(() => { teamsData.forEach(t => { if(t.is_timer_running) { const el = document.getElementById(`timer-${t.id}`); if(el) el.innerText = formatTime(t); } }); }, 1000);
         
         window.addEventListener('beforeunload', () => { 
