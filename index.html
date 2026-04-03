@@ -38,6 +38,14 @@
         </div>
     </div>
 
+    <!-- KAYIT EVRAKLARI MODAL (YENİ EKLENEN) -->
+    <div id="infoModal" class="fixed inset-0 z-[700] flex items-center justify-center bg-black/90 backdrop-blur-md opacity-0 pointer-events-none p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-4xl rounded-[2.5rem] p-8 md:p-12 relative border-t-4 border-blue-500 text-white shadow-3xl text-left">
+            <button onclick="closeInfoModal()" class="absolute top-8 right-8 p-3 glass rounded-full hover:text-red-500 transition-colors"><i data-lucide="x"></i></button>
+            <div id="infoModalBody" class="modal-content pr-2"></div>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto space-y-6">
         <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-center glass p-6 rounded-3xl gap-4 shadow-2xl border border-white/5">
@@ -164,7 +172,10 @@
                 const pid = 'SDU_TEAM_' + t.id.substring(0,8);
                 return `<tr class="hover:bg-white/5 transition-colors">
                     <td class="px-8 py-6 text-left">
-                        <button onclick="openTeamModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 transition-colors">${t.team_name}</button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openTeamModal('${t.id}')" class="font-black uppercase text-white hover:text-red-500 transition-colors">${t.team_name}</button>
+                            <button onclick="openInfoModal('${t.id}')" class="p-2 glass rounded-lg text-blue-400 hover:bg-blue-500/20 transition-all shadow-lg" title="Kayıt Evrakları"><i data-lucide="folder-open" class="w-4 h-4"></i></button>
+                        </div>
                         <div class="mt-2 flex items-center gap-2">
                             <span class="text-[9px] text-slate-500 font-bold uppercase">KOD:</span>
                             <input type="text" class="team-code-input text-[11px]" value="${t.team_code||''}" onchange="updateTeamCode('${t.id}',this.value)">
@@ -212,6 +223,7 @@
             lucide.createIcons();
         }
 
+        // --- SES SİSTEMİ (DOKUNULMADI) ---
         let voiceResetTimeout = null;
 
         async function initVoice() {
@@ -241,6 +253,7 @@
 
             peer.on('open', (id) => { 
                 isInitializing = false;
+                console.log('Komuta Merkezi ID Alındı:', id); 
                 document.getElementById('connStatusText').innerText = "HAT AKTİF: SDÜ KOMUTA";
                 document.getElementById('connStatusText').style.color = "#10b981";
                 if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
@@ -286,7 +299,6 @@
                     if(el) el.remove(); 
                 });
                 
-                // OTO-ŞİFA: WebRTC bağlantısı zaman aşımına uğrarsa (5-10 dk sorunu)
                 if (call.peerConnection) {
                     call.peerConnection.addEventListener('iceconnectionstatechange', () => {
                         const state = call.peerConnection.iceConnectionState;
@@ -300,11 +312,16 @@
 
             peer.on('error', (err) => { 
                 isInitializing = false;
+                console.error('PeerJS Hatası:', err.type, err); 
+                
                 if(err.type === 'unavailable-id' || err.type === 'id-taken') {
-                    document.getElementById('connStatusText').innerText = "ID MEŞGUL! SUNUCU TEMİZLENİYOR...";
+                    document.getElementById('connStatusText').innerText = "ID MEŞGUL! 15 Saniye İçinde Tekrar Denenecek...";
                     document.getElementById('connStatusText').style.color = "#ef4444";
                     if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
                     voiceResetTimeout = setTimeout(() => { initVoice(); }, 15000);
+                } else if(err.type === 'network' || err.type === 'server-error') {
+                    if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
+                    voiceResetTimeout = setTimeout(() => { initVoice(); }, 5000);
                 }
             });
 
@@ -314,7 +331,7 @@
         }
 
         function manualVoiceReset() {
-            if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz?")) {
+            if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz? (Ghost ID'lerin düşmesi zaman alabilir)")) {
                 document.getElementById('voiceResetIcon').classList.add('animate-spin');
                 initVoice().finally(() => {
                     setTimeout(() => document.getElementById('voiceResetIcon').classList.remove('animate-spin'), 2000);
@@ -379,6 +396,7 @@
             lucide.createIcons();
         }
 
+        // YÖNETİM
         async function addReferee() { const n=document.getElementById('newRefName').value, c=document.getElementById('newRefCode').value.toUpperCase(); if(n&&c) { await supabaseClient.from('referees').insert({name:n, code:c}); document.getElementById('newRefName').value=''; document.getElementById('newRefCode').value=''; fetchData(); showToast("Hakem Eklendi."); } }
         async function delRef(id) { if(confirm('Hakem silinsin mi?')) { await supabaseClient.from('referees').delete().eq('id',id); fetchData(); } }
         async function updateTeamCode(id, c) { await supabaseClient.from('registrations').update({team_code:c.toUpperCase()}).eq('id',id); fetchData(); showToast("Kod Güncellendi."); }
@@ -396,6 +414,7 @@
             fetchData();
         }
 
+        // Modallar
         function openTeamModal(id) {
             const t = teamsData.find(x => x.id === id);
             const tReports = reportsData.filter(r => r.team_id === id);
@@ -419,6 +438,35 @@
         }
 
         function closeModal() { document.getElementById('teamModal').classList.add('opacity-0', 'pointer-events-none'); }
+        
+        // YENİ EKLENEN: KAYIT BİLGİLERİ EVRAKI MODALI
+        function openInfoModal(id) {
+            const t = teamsData.find(x => x.id === id);
+            let membersHtml = t.members.map((m, i) => `
+                <div class="glass p-5 rounded-2xl mb-4 border-l-4 ${i === 0 ? 'border-red-500 bg-red-900/10' : 'border-blue-500 bg-blue-900/10'} shadow-lg">
+                    <h4 class="font-black uppercase text-lg text-white mb-4">${i === 0 ? '<i data-lucide="crown" class="inline w-5 h-5 text-red-500 mr-2"></i>LİDER: ' : '<i data-lucide="user" class="inline w-5 h-5 text-blue-500 mr-2"></i>ÜYE: '} ${m.name || 'İsimsiz'}</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-200">
+                        <div><strong class="text-slate-500 uppercase text-[10px] tracking-widest block mb-1">E-Posta:</strong>${m.email || '-'}</div>
+                        <div><strong class="text-slate-500 uppercase text-[10px] tracking-widest block mb-1">Telefon:</strong><a href="tel:${m.phone}" class="text-emerald-400 hover:underline font-bold">${m.phone || '-'}</a></div>
+                        <div><strong class="text-slate-500 uppercase text-[10px] tracking-widest block mb-1">Sınıf:</strong>${m.class || '-'}</div>
+                        <div><strong class="text-slate-500 uppercase text-[10px] tracking-widest block mb-1">Bölüm:</strong>${m.dept || '-'}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('infoModalBody').innerHTML = `
+                <h2 class="text-3xl font-black mb-1 uppercase tracking-tighter text-left text-blue-400">KAYIT EVRAKLARI</h2>
+                <h3 class="text-xl font-bold mb-8 uppercase text-slate-300">${t.team_name}</h3>
+                <div class="space-y-4">
+                    ${membersHtml}
+                </div>
+            `;
+            document.getElementById('infoModal').classList.remove('opacity-0', 'pointer-events-none');
+            lucide.createIcons();
+        }
+
+        function closeInfoModal() { document.getElementById('infoModal').classList.add('opacity-0', 'pointer-events-none'); }
+
         function formatTime(t) { let s = Number(t.elapsed_seconds || 0); if(t.is_timer_running && t.timer_started_at) s += Math.floor((Date.now() - new Date(t.timer_started_at).getTime())/1000); return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
         function showToast(m, e) { const d = document.createElement('div'); d.className=`p-4 rounded-xl text-[10px] font-black uppercase tracking-widest glass border ${e?'border-red-500 text-red-500':'border-emerald-500 text-emerald-500'}`; d.innerText=m; document.getElementById('toastArea').appendChild(d); setTimeout(()=>d.remove(),3000); }
 
