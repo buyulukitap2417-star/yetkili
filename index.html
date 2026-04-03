@@ -14,19 +14,14 @@
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; opacity: 0.5; }
         .tab-btn.active { border-color: #ef4444; color: #ef4444; opacity: 1; background: rgba(239, 68, 68, 0.05); }
-        
         .penalty-btn { font-size: 10px; font-weight: 800; width: 38px; height: 30px; border-radius: 8px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
         .penalty-btn:active { transform: scale(0.9); }
-        
         .mic-active { background: #ef4444 !important; animation: pulse-mic 1.5s infinite; border-color: #ef4444 !important; color: white !important; }
         .spk-active { background: #3b82f6 !important; border-color: #3b82f6 !important; color: white !important; }
-        
         @keyframes pulse-mic { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #9b1c31; border-radius: 10px; }
         .modal-content { max-height: 85vh; overflow-y: auto; }
-        
         .team-code-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 0.25rem 0.5rem; width: 100px; text-align: center; font-family: monospace; font-weight: bold; color: #ef4444; text-transform: uppercase; outline: none; }
         .team-code-input:focus { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
     </style>
@@ -217,7 +212,6 @@
             lucide.createIcons();
         }
 
-        // --- GÜÇLENDİRİLMİŞ PEERJS BAĞLANTI MANTIĞI ---
         let voiceResetTimeout = null;
 
         async function initVoice() {
@@ -235,8 +229,7 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            const adminID = 'SDU_ADMIN_2026_VOICE';
-            peer = new Peer(adminID, { 
+            peer = new Peer('SDU_ADMIN_2026_VOICE', { 
                 debug: 1,
                 config: { 
                     'iceServers': [
@@ -248,7 +241,6 @@
 
             peer.on('open', (id) => { 
                 isInitializing = false;
-                console.log('Komuta Merkezi ID Alındı:', id); 
                 document.getElementById('connStatusText').innerText = "HAT AKTİF: SDÜ KOMUTA";
                 document.getElementById('connStatusText').style.color = "#10b981";
                 if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
@@ -262,23 +254,16 @@
                     } catch(e) { showToast("Mikrofon İzni Gerekli!", true); }
                 }
 
-                // EFSANE ÇÖZÜM BURADA: Her arayana (ister hakem, ister yarışmacı olsun) 
-                // mikrofonumuzun YEPYENİ BİR KLONUNU gönderiyoruz.
-                // Böylece hakemin sesini kapattığımızda yarışmacının sesi kesilmiyor!
                 const clonedStream = myStream.clone();
                 const pid = call.peer;
                 
-                // Başlangıç yetkisini belirle
                 let allowed = false;
                 if(privateMicId === pid) allowed = true;
                 else if(!privateMicId) {
                     if(tmMic && pid.includes('SDU_TEAM_')) allowed = true;
                     if(rfMic && pid.includes('SDU_REF_')) allowed = true;
                 }
-                
-                if (clonedStream.getAudioTracks().length > 0) {
-                    clonedStream.getAudioTracks()[0].enabled = allowed;
-                }
+                if (clonedStream.getAudioTracks().length > 0) clonedStream.getAudioTracks()[0].enabled = allowed;
 
                 call.answer(clonedStream);
                 activeCalls[pid] = call;
@@ -300,20 +285,26 @@
                     const el = document.getElementById('audio-'+call.peer);
                     if(el) el.remove(); 
                 });
+                
+                // OTO-ŞİFA: WebRTC bağlantısı zaman aşımına uğrarsa (5-10 dk sorunu)
+                if (call.peerConnection) {
+                    call.peerConnection.addEventListener('iceconnectionstatechange', () => {
+                        const state = call.peerConnection.iceConnectionState;
+                        if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                            call.close();
+                            delete activeCalls[call.peer];
+                        }
+                    });
+                }
             });
 
             peer.on('error', (err) => { 
                 isInitializing = false;
-                console.error('PeerJS Hatası:', err.type, err); 
-                
                 if(err.type === 'unavailable-id' || err.type === 'id-taken') {
-                    document.getElementById('connStatusText').innerText = "ID MEŞGUL! 15 Saniye İçinde Tekrar Denenecek...";
+                    document.getElementById('connStatusText').innerText = "ID MEŞGUL! SUNUCU TEMİZLENİYOR...";
                     document.getElementById('connStatusText').style.color = "#ef4444";
                     if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
                     voiceResetTimeout = setTimeout(() => { initVoice(); }, 15000);
-                } else if(err.type === 'network' || err.type === 'server-error') {
-                    if(voiceResetTimeout) clearTimeout(voiceResetTimeout);
-                    voiceResetTimeout = setTimeout(() => { initVoice(); }, 5000);
                 }
             });
 
@@ -323,7 +314,7 @@
         }
 
         function manualVoiceReset() {
-            if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz? (Ghost ID'lerin düşmesi zaman alabilir)")) {
+            if(confirm("Ses sistemini zorla yeniden başlatmak istiyor musunuz?")) {
                 document.getElementById('voiceResetIcon').classList.add('animate-spin');
                 initVoice().finally(() => {
                     setTimeout(() => document.getElementById('voiceResetIcon').classList.remove('animate-spin'), 2000);
@@ -358,7 +349,6 @@
             Object.keys(activeCalls).forEach(pid => {
                 const call = activeCalls[pid];
                 if (call.peerConnection) {
-                    // KLONLANMIŞ ses trackini buluyoruz ve sadece o cihaz için açıp/kapatıyoruz
                     const sender = call.peerConnection.getSenders().find(s => s.track?.kind === 'audio');
                     if(sender && sender.track) {
                         let allowed = false;
